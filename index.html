@@ -530,7 +530,7 @@ function divine(){
   const steps=(kuubou?2:0)+(change?1:0),final=downMark(base,steps);
   const sg=SIGNAL[final],color=sg[0],verdict=sg[1],gloss=sg[2],cls=sg[3],punch=sg[4];
   let chips='';
-  if(kuubou) chips+='<span class="chip chip-kuubou">運気が沈む2年間のうち</span> ';
+  if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
   if(change) chips+='<span class="chip chip-change">人生の切り替え時期</span> ';
   if(!kuubou&&!change) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
   let st; if(steps===0) st='特に重なる時期はなく、運気のまま読めます';
