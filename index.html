@@ -547,8 +547,7 @@ function shareRowHTML(txt){
   const t=txt.replace(/'/g,"’");
   return '<div class="share-row"><span class="share-lab">結果をシェア：</span>'+
     '<button class="share-btn sb-line" onclick="shareLINE(\''+t+'\')">LINEで送る</button>'+
-    '<button class="share-btn sb-x" onclick="shareX(\''+t+'\')">Xに投稿</button>'+
-    '<button class="share-btn sb-copy" onclick="shareCopy(\''+t+'\',this)">コピー</button></div>';
+    '<button class="share-btn sb-x" onclick="shareX(\''+t+'\')">Xに投稿</button></div>';
 }
 function shareX(txt){window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(APP_URL),'_blank','noopener');}
 function shareLINE(txt){window.open('https://line.me/R/share?text='+encodeURIComponent(txt+'\n'+APP_URL),'_blank','noopener');}
