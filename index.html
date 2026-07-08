@@ -95,6 +95,18 @@ padding:12px 0;display:inline-block;}
 .detail .big{font-family:'Shippori Mincho',serif;font-size:26px;font-weight:700;color:var(--washi);letter-spacing:.08em;}
 .detail .wamei{color:var(--kin2);font-size:15px;margin-left:6px;}
 .detail .note{font-size:15px;color:var(--washi2);opacity:.8;margin-top:8px;line-height:1.6;}
+.type-name{font-family:'Shippori Mincho',serif;font-size:clamp(20px,5.5vw,26px);font-weight:700;color:var(--kin2);letter-spacing:.06em;line-height:1.4;}
+.share-row{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:18px;}
+.share-lab{font-size:13px;color:var(--washi2);opacity:.75;letter-spacing:.1em;}
+.share-btn{padding:9px 16px;border-radius:20px;border:1px solid rgba(201,164,76,.35);background:#0f0c0a;color:var(--washi);font-size:14px;cursor:pointer;font-family:inherit;transition:transform .15s;}
+.share-btn:hover{transform:translateY(-1px);}
+.sb-x{border-color:rgba(255,255,255,.35);}
+.sb-line{border-color:rgba(76,201,96,.5);color:#8fe39b;}
+.hist-wrap{margin-top:14px;}
+.hist-title{font-size:13px;color:var(--kin2);opacity:.8;letter-spacing:.12em;margin-bottom:6px;}
+.hist-chip{display:inline-block;background:#0f0c0a;border:1px solid rgba(201,164,76,.3);border-radius:20px;padding:8px 14px;margin:4px 8px 0 0;cursor:pointer;font-size:14px;color:var(--washi2);}
+.hist-chip:active{transform:scale(.97);}
+.hist-clear{display:inline-block;margin:4px 0 0;padding:8px 6px;font-size:12px;color:var(--washi2);opacity:.5;cursor:pointer;text-decoration:underline;}
 .chip{display:inline-block;padding:3px 11px;border-radius:20px;font-size:12px;letter-spacing:.1em;margin-top:10px;}
 .chip-gogyo{border:1px solid var(--moku);color:#a8c79b;}
 .chip-change{background:var(--shu2);color:#fff;}
@@ -248,8 +260,9 @@ background:radial-gradient(circle at 80% 20%,rgba(201,164,76,.12),transparent 70
       <button class="divine-btn horo-btn" onclick="toHoroscope()" style="margin-top:12px;background:linear-gradient(180deg,#3a3168,#2c2656);color:var(--kin2);">入力した生年月日でホロスコープを見る</button>
     </div>
   </div>
+  <div id="history" class="hist-wrap"></div>
   <div id="result"></div>
-  <div class="disclaimer">生まれた日から、その年に「進んでいい・気をつける・待つべき」のどれかを信号でお伝えします。</div>
+  <div class="disclaimer">生まれた日から、その年に「進んでいい・気をつける・待つべき」のどれかを信号でお伝えします。<br>※持ち味の月星座は、生まれた日の正午時点で計算しています。</div>
   <footer>― 三命 ―</footer>
   </div>
 
@@ -407,6 +420,28 @@ const PALACE_SCORE={"乾":"◎","巽":"◎","兌":"○","震":"○","離":"○",
 const PALACE_MEAN={"乾":"仕上げ・充実の頂点期","巽":"発展・縁が広がる頂点期","兌":"収穫・喜びの前進期",
 "震":"芽吹き・始動の前進期","離":"輝き・頂点。才が認められる前進期","坤":"地固め・足場を整える準備期",
 "坎":"運気の底・冬眠の停止期","艮":"転換の谷・慎重に構える時期","中宮":"八方塞がり・守りの停止期"};
+const PALACE_PUNCH={
+"乾":"積み上げてきたことが実を結ぶとき。仕上げにかかってください。手にした実りは、分け合うと次につながります。",
+"巽":"人とのご縁が追い風になるとき。誘われたら顔を出して。遠くからの話ほど、いい流れを運んできます。",
+"兌":"楽しみと実りのとき。よく笑い、よく味わってください。ただし口は災いのもと。言葉づかいだけは丁寧に。",
+"震":"新しいことを始めるのに向いたとき。小さくていいから一歩目を。声を上げた人から順に、道が開けます。",
+"離":"人から見られ、認められるとき。表に出た分だけ返ってきます。ただし隠しごとも明るみに出やすいので、正直がいちばん。",
+"坤":"派手さはないけれど、大事な仕込みのとき。足元を固めてコツコツ積む。ここでの丁寧さが、次の伸びを決めます。",
+"坎":"無理に動かず、力をたくわえるとき。土の中で春を待つ球根と同じです。学びと休みに使えば、底は怖くありません。",
+"艮":"流れが切り替わる変わり目。焦って動くより、いったん立ち止まって仕分けを。やめること・続けることを決めるときです。",
+"中宮":"動くより守りのとき。頼られやすくなりますが、抱え込みは禁物。現状維持で十分、それが正解です。"};
+const PALACE_DO={
+"乾":"仕上げの年。やりかけのことを完成まで持っていく、成果をきちんと形にする、世話になった人にお礼を伝える。この三つが運を締めくくります。",
+"巽":"ご縁の年。集まりには顔を出す、紹介された話は一度受けてみる、遠出や旅行も吉。遠くから来た話ほど、いい流れを連れてきます。",
+"兌":"実りと楽しみの年。よく笑い、人との食事や趣味にお金を惜しまない。新しい出会いの場に出ると、喜びごとが増えます。",
+"震":"始動の年。やりたかったことを一つ始める、まわりに宣言する、朝の時間を使う。早く動いた人から順に、勢いに乗れます。",
+"離":"注目の年。発信や発表の場に立つ、作品や実績を表に出す、身なりを整える。見られることを味方につけてください。"};
+const PALACE_DO_M={
+"乾":"仕上げの月。やりかけを完成させ、成果を形にし、お世話になった人にお礼を。締めくくりに向く月です。",
+"巽":"ご縁の月。集まりに顔を出し、紹介された話は一度受けてみる。遠出や旅行も吉です。",
+"兌":"実りと楽しみの月。人との食事や趣味を楽しんで。出会いの場に、喜びごとが待っています。",
+"震":"始動の月。やりたかったことを一つ始めて、まわりに宣言を。早く動くほど勢いに乗れます。",
+"離":"注目の月。発信や発表に向いています。身なりを整え、見られることを味方につけて。"};
 const SIGNAL={"◎":["青","進め","今年は動いていい年。挑戦や新しいことに向いています","sig-ao","迷わなくていい。今年のあなたは追い風の中にいます"],
 "○":["青","進め","今年は動いていい年。前に進んで大丈夫です","sig-ao","前に進んでいい年。手応えはちゃんと返ってきます"],
 "△":["黄","ひと呼吸","あせらず準備の年。下ごしらえに力を注いで","sig-ki","急いで動くより、仕込みに回したほうがいい年です"],
@@ -450,6 +485,106 @@ const SIGN_NOTE={
   "蟹座":"情に厚く面倒見がいい","獅子座":"堂々として華がある","乙女座":"きちょうめんで誠実",
   "天秤座":"バランス感覚に優れ社交的","蠍座":"一途で情熱を内に秘める","射手座":"自由で前向き",
   "山羊座":"努力家で責任感が強い","水瓶座":"独創的で自分を持つ","魚座":"やさしく感受性ゆたか"};
+
+// ===== 太陽×月エレメント 16タイプ =====
+const APP_URL='https://punnti333.github.io/sanmei-cross/';
+const SIGN_ELEM={"牡羊座":"火","獅子座":"火","射手座":"火","牡牛座":"地","乙女座":"地","山羊座":"地",
+"双子座":"風","天秤座":"風","水瓶座":"風","蟹座":"水","蠍座":"水","魚座":"水"};
+const SIGNS12=["牡羊座","牡牛座","双子座","蟹座","獅子座","乙女座","天秤座","蠍座","射手座","山羊座","水瓶座","魚座"];
+function moonSign(y,m,d){
+  // 生まれた日の正午（日本時間）の月の黄経から月星座を求める（天文計算・誤差約0.1度）
+  let yy=y,mm=m;
+  if(mm<=2){yy-=1;mm+=12;}
+  const A=Math.floor(yy/100),B=2-A+Math.floor(A/4);
+  const JD=Math.floor(365.25*(yy+4716))+Math.floor(30.6001*(mm+1))+d+B-1524.5+3/24; // 正午JST=03:00UT
+  const T=(JD-2451545.0)/36525;
+  const rad=Math.PI/180;
+  const Lp=218.3164477+481267.88123421*T;
+  const D=297.8501921+445267.1114034*T;
+  const M=357.5291092+35999.0502909*T;
+  const Mp=134.9633964+477198.8675055*T;
+  const F=93.2720950+483202.0175233*T;
+  let lon=Lp
+    +6.288774*Math.sin(Mp*rad)
+    +1.274027*Math.sin((2*D-Mp)*rad)
+    +0.658314*Math.sin(2*D*rad)
+    +0.213618*Math.sin(2*Mp*rad)
+    -0.185116*Math.sin(M*rad)
+    -0.114332*Math.sin(2*F*rad)
+    +0.058793*Math.sin((2*D-2*Mp)*rad)
+    +0.057066*Math.sin((2*D-M-Mp)*rad)
+    +0.053322*Math.sin((2*D+Mp)*rad)
+    +0.045758*Math.sin((2*D-M)*rad);
+  lon=((lon%360)+360)%360;
+  return SIGNS12[Math.floor(lon/30)];
+}
+const TYPE16={
+"火火":["ガソリン満タン型","思い立ったら即行動。表も中身も全力で、迷っている時間がもったいない人。周りを巻き込む熱があります。ただしブレーキが苦手。休むのも仕事のうちです。"],
+"火地":["表は炎、中身は岩","人前では明るく勢いがあるのに、心の奥はとても慎重。実は石橋を叩いて渡る人です。派手に見えて、堅実。この組み合わせは強いです。"],
+"火風":["打ち上げ花火型","ぱっと場を明るくする華があり、頭の回転も速い人。ただ、飽きるのも早め。次々に新しいことへ向かう、その軽やかさが魅力です。"],
+"火水":["熱いのに泣き虫","表では堂々として情熱的。でも心の奥は驚くほど繊細で、人知れず涙することも。その優しさが、あなたの熱を本物にしています。"],
+"地火":["静かな火山","表向きは落ち着いたコツコツ型。周りからは「堅実な人」と思われています。でも心の奥には、誰にも見せていない熱があります。一度火がつくと、止まりません。"],
+"地地":["動かざる山","何があっても動じない、筋金入りの安定型。決めたことは最後までやり抜きます。周りに安心感を与える存在。ただし頑固さもピカイチです。"],
+"地風":["真面目な自由人","見た目はきちんとした常識人。でも心の中は自由で、束縛が大嫌い。真面目な顔で意外なことを考えている、面白い人です。"],
+"地水":["見た目は岩、中身は豆腐","外では動じないしっかり者。でも本当は、人の一言をずっと覚えているくらい繊細です。強がるのが癖になっていませんか。"],
+"風火":["口から生まれた冒険家","話し上手で人を惹きつけ、心の奥には冒険心が燃えています。思いついたら口に出し、口に出したら動く。あなたの言葉には勢いがあります。"],
+"風地":["軽く見えて実は堅実家","フットワーク軽く社交的。でも心の奥では、ちゃんと地に足がついています。軽やかさと堅実さを両方持つ、世渡り上手な人です。"],
+"風風":["風まかせの旅人","自由こそ命。縛られるのが何より苦手で、興味の赴くままに動きます。その身軽さが縁を運んでくる人。とどまるより、流れの中が似合います。"],
+"風水":["おしゃべりな詩人","言葉が達者で場を回すのが上手。でも心の奥は夢見がちなロマンチスト。軽い会話の裏に、深い感受性を隠しています。"],
+"水火":["涙もろい情熱家","人の気持ちに寄り添う優しさと、心の奥に燃える情熱の両方を持つ人。感動しやすく、涙もろい。その共感力が人を動かします。"],
+"水地":["深い湖","物静かで感受性ゆたか。心の奥はどっしり安定していて、簡単には揺れません。静かな水面の下に、確かな強さがある人です。"],
+"水風":["つかめない霧","優しくて感じがいいのに、どこか本心が見えない。実は心の中で自由に飛び回っています。そのつかめなさが、人を惹きつけます。"],
+"水水":["海そのもの","感受性のかたまり。人の気持ちが流れ込んでくるほど共感力が高い人です。優しさは海の深さ。ただし人の感情に飲まれないよう、線引きも大切に。"]};
+function getType16(y,m,d){
+  const s=sunSign(m,d),mo=moonSign(y,m,d);
+  const se=SIGN_ELEM[s],me=SIGN_ELEM[mo];
+  const t=TYPE16[se+me];
+  return {name:t[0],body:t[1],sun:s,moon:mo,se:se,me:me};
+}
+
+// ===== シェア機能 =====
+function shareRowHTML(txt){
+  const t=txt.replace(/'/g,"’");
+  return '<div class="share-row"><span class="share-lab">結果をシェア：</span>'+
+    '<button class="share-btn sb-line" onclick="shareLINE(\''+t+'\')">LINEで送る</button>'+
+    '<button class="share-btn sb-x" onclick="shareX(\''+t+'\')">Xに投稿</button>'+
+    '<button class="share-btn sb-copy" onclick="shareCopy(\''+t+'\',this)">コピー</button></div>';
+}
+function shareX(txt){window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(APP_URL),'_blank','noopener');}
+function shareLINE(txt){window.open('https://line.me/R/share?text='+encodeURIComponent(txt+'\n'+APP_URL),'_blank','noopener');}
+function shareCopy(txt,btn){
+  const full=txt+'\n'+APP_URL;
+  const done=function(){if(btn){btn.textContent='コピーしました';setTimeout(function(){btn.textContent='コピー';},1500);}};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(full).then(done).catch(function(){});}
+  else{var ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);}
+}
+
+// ===== 履歴保存（この端末のブラウザ内にのみ保存されます） =====
+function loadHistory(){try{return JSON.parse(localStorage.getItem('sanmei_history')||'[]');}catch(e){return [];}}
+function saveHistory(y,m,d,type){
+  try{
+    let h=loadHistory().filter(function(e){return !(e.y===y&&e.m===m&&e.d===d);});
+    h.unshift({y:y,m:m,d:d,type:type});
+    if(h.length>5)h=h.slice(0,5);
+    localStorage.setItem('sanmei_history',JSON.stringify(h));
+  }catch(e){}
+  renderHistory();
+}
+function fillHistory(y,m,d){
+  document.getElementById('y').value=y;
+  document.getElementById('m').value=m;
+  document.getElementById('d').value=d;
+}
+function clearHistory(){try{localStorage.removeItem('sanmei_history');}catch(e){} renderHistory();}
+function renderHistory(){
+  const el=document.getElementById('history'); if(!el)return;
+  const h=loadHistory();
+  if(!h.length){el.innerHTML='';return;}
+  let s='<div class="hist-title">前回までの入力（タップで再入力）</div>';
+  h.forEach(function(e){s+='<span class="hist-chip" onclick="fillHistory('+e.y+','+e.m+','+e.d+')">'+e.y+'年'+e.m+'月'+e.d+'日'+(e.type?'／'+e.type:'')+'</span>';});
+  s+='<span class="hist-clear" onclick="clearHistory()">履歴を消す</span>';
+  el.innerHTML=s;
+}
 
 function go(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -524,55 +659,95 @@ function divine(){
   if(ty<1930||ty>2030){alert('占う年を正しく入力してください。');return;}
   const hs=honmeiStar(y,m,d),star=hs[0],eff=hs[1],info=NINE[star];
   const sign=sunSign(m,d);
+  const t16=getType16(y,m,d);
   const center=yearCenter(ty),palace=palaceOf(center,star),base=PALACE_SCORE[palace];
   const ch=isChange(y,m,d,isMale,ty),change=ch[0],startAge=ch[1];
   const kuubou=isKuubouYear(y,m,d,ty);
   const steps=(kuubou?2:0)+(change?1:0),final=downMark(base,steps);
-  const sg=SIGNAL[final],color=sg[0],verdict=sg[1],gloss=sg[2],cls=sg[3],punch=sg[4];
+  const sg=SIGNAL[final],color=sg[0],verdict=sg[1],cls=sg[3];
+  let gloss=sg[2],punch=sg[4];
+  if(steps>0 && final==='▲' && (base==='◎'||base==='○')){
+    gloss='動けなくはない年。ただし、よく考えてから。慎重さが条件です';
+    punch='地力はある年。動くなら小さく、じっくり。勢いまかせだけは禁物です';
+  }
   let chips='';
   if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
   if(change) chips+='<span class="chip chip-change">人生の切り替え時期</span> ';
   if(!kuubou&&!change) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
   let st; if(steps===0) st='特に重なる時期はなく、運気のまま読めます';
   else{let p=[];if(kuubou)p.push('運気の沈む時期');if(change)p.push('切り替えの時期');st=p.join('と')+'が重なっているぶん、慎重にいきたい一年です';}
+  const pp = steps===0 ? PALACE_PUNCH[palace]
+    : '土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただし今年は時期の重なりがあるぶん、その力を大きく使う年ではありません。信号の判定を目安にしてください。';
+  // 最後のまとめ：青なら過ごし方、黄・赤なら来年の見通し
+  let flowMsg;
+  if(color==='青'){
+    flowMsg='【今年の使い方】'+PALACE_DO[palace];
+  }else{
+    const nty=ty+1;
+    const npal=palaceOf(yearCenter(nty),star), nbase=PALACE_SCORE[npal];
+    const nch=isChange(y,m,d,isMale,nty)[0], nku=isKuubouYear(y,m,d,nty);
+    const nfinal=downMark(nbase,(nku?2:0)+(nch?1:0));
+    const ncolor=SIGNAL[nfinal][0], ntop=PALACE_MEAN[npal].split('・')[0];
+    if(ncolor==='青') flowMsg='【来年の見通し】'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
+    else if(ncolor==='黄') flowMsg='【来年の見通し】'+nty+'年は「'+ntop+'」で黄信号。流れは少しずつ上向きます。今年は土台づくりに使ってください。';
+    else flowMsg='【来年の見通し】'+nty+'年も「'+ntop+'」で赤信号が続きます。あわてず、学びと蓄えにあてる二年と考えてください。';
+  }
   const el=document.getElementById('result');
   el.innerHTML='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
     '<div class="mark">'+final+'</div><div class="verdict">'+verdict+'</div>'+
     '<div class="punch">'+punch+'</div><div class="gloss">'+gloss+'</div></div>'+
     '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
-    '<div class="big">'+info[5]+'<span class="wamei">'+info[2]+'・'+info[0]+'</span></div>'+
-    '<div class="note">'+sign+'らしく'+SIGN_NOTE[sign]+'</div>'+
-    '<div class="note">'+info[4]+'</div><span class="chip chip-gogyo">タイプ：'+info[1]+'の気</span></div>'+
+    '<div class="type-name">「'+t16.name+'」タイプ</div>'+
+    '<div class="note">'+t16.body+'</div>'+
+    '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div></div>'+
     '<div class="detail"><div class="lab">'+ty+'年のあなたの運気</div>'+
     '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span></div>'+
-    '<div class="note">'+PALACE_MEAN[palace]+'</div>'+chips+'</div></div>'+
-    '<div class="flow">■ あなたは<b>'+info[5]+'＝'+info[2]+'（'+info[0]+'）</b>のタイプ。'+(eff!==y?'（2月初めの立春より前の生まれなので、前の年として読みます）':'')+
-    '<span class="arr">→</span>'+ty+'年のあなたは<b>'+PALACE_MEAN[palace]+'</b>にあたります。'+
-    '<span class="arr">→</span>'+st+'<span class="arr">→</span>今年は<b>'+color+'信号「'+verdict+'」</b>です。</div>';
+    '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
+    '<div class="note">'+pp+'</div>'+chips+'</div></div>'+
+    '<div class="flow">'+flowMsg+'</div>'+
+    shareRowHTML('私は「'+t16.name+'」タイプ。'+ty+'年は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
   el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'start'});
+  saveHistory(y,m,d,t16.name);
 }function divineMonth(y,m,d){
   const hs=honmeiStar(y,m,d),star=hs[0],info=NINE[star];
   const sign=sunSign(m,d);
+  const t16=getType16(y,m,d);
   const tgt=shiftMonth(baseMonth.yearAdj,baseMonth.setsuMonth,(pickedMonth==='last')?-1:(pickedMonth==='next')?1:0);
   const cal=setsuToCalMonth(tgt.setsuMonth);
   const palace=monthPalaceByIndex(star,tgt.yearAdj,tgt.setsuMonth);
   const base=PALACE_SCORE[palace];
   const sg=SIGNAL_M[base],color=sg[0],verdict=sg[1],gloss=sg[2],cls=sg[3],punch=sg[4];
   const label=(pickedMonth==='last')?'先月':(pickedMonth==='next')?'来月':'今月';
+  // まとめ：青なら使い方、黄・赤なら翌月の見通し
+  let flowMsg;
+  if(color==='青'){
+    flowMsg='【この月の使い方】'+PALACE_DO_M[palace];
+  }else{
+    const nx=shiftMonth(tgt.yearAdj,tgt.setsuMonth,1);
+    const ncal=setsuToCalMonth(nx.setsuMonth);
+    const npal=monthPalaceByIndex(star,nx.yearAdj,nx.setsuMonth);
+    const nbase=PALACE_SCORE[npal];
+    const ncolor=SIGNAL_M[nbase][0], ntop=PALACE_MEAN[npal].split('・')[0];
+    if(ncolor==='青') flowMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」の運気に変わり、青信号になります。今はひと休みして、翌月に動くのが得策です。';
+    else if(ncolor==='黄') flowMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」で黄信号。流れは少しずつ変わります。いまのうちに準備を。';
+    else flowMsg='【翌月の見通し】翌月（'+ncal+'月）も「'+ntop+'」で赤信号が続きます。この間は整理と充電にあてるのが吉です。';
+  }
   const el=document.getElementById('result');
   el.innerHTML='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
     '<div class="mark">'+base+'</div><div class="verdict">'+verdict+'</div>'+
     '<div class="punch">'+punch+'</div><div class="gloss">'+gloss+'</div></div>'+
     '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
-    '<div class="big">'+info[5]+'<span class="wamei">'+info[2]+'・'+info[0]+'</span></div>'+
-    '<div class="note">'+sign+'らしく'+SIGN_NOTE[sign]+'</div></div>'+
+    '<div class="type-name">「'+t16.name+'」タイプ</div>'+
+    '<div class="note">'+t16.body+'</div>'+
+    '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div></div>'+
     '<div class="detail"><div class="lab">'+label+'（'+cal+'月）のあなたの運気</div>'+
     '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span></div>'+
-    '<div class="note">'+PALACE_MEAN[palace]+'</div></div></div>'+
-    '<div class="flow">■ あなたは<b>'+info[5]+'＝'+info[2]+'（'+info[0]+'）</b>のタイプ。'+
-    '<span class="arr">→</span>'+label+'（'+cal+'月）のあなたは<b>'+PALACE_MEAN[palace]+'</b>にあたります。'+
-    '<span class="arr">→</span>'+label+'は<b>'+color+'信号「'+verdict+'」</b>です。</div>';
+    '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
+    '<div class="note">'+PALACE_PUNCH[palace]+'</div></div></div>'+
+    '<div class="flow">'+flowMsg+'</div>'+
+    shareRowHTML('私は「'+t16.name+'」タイプ。'+label+'（'+cal+'月）は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
   el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'start'});
+  saveHistory(y,m,d,t16.name);
 }
 
 function persona(y,m,d){
@@ -634,13 +809,15 @@ function checkAishou(){
       '<div class="pcard"><div class="ph">お相手</div><div class="pl">'+
         '持ち味：<b>'+B.info[5]+'（'+B.info[2]+'・'+B.info[0]+'）</b><br>心の奥：<b>'+B.keisha+'宮傾斜</b>　'+KEISHA_NOTE[B.keisha]+'<br>本質の彩り：<b>'+B.sign+'</b>らしく'+SIGN_NOTE[B.sign]+'</div></div>'+
     '</div>'+
-    '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">二人の縁は ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+'</div>';
+    '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">二人の縁は ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+'</div>'+
+    shareRowHTML('私たちの相性は'+starStr+'「'+verdict+'」でした！ #三命クロス法');
   const el=document.getElementById('aishou-result');
   el.innerHTML=html; el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 const ay_=document.getElementById('ay'),am_=document.getElementById('am'),ad_=document.getElementById('ad'),
       by_=document.getElementById('by'),bm_=document.getElementById('bm'),bd_=document.getElementById('bd');
 try{ initYearButtons(); initMonthButtons(); }catch(e){}
+try{ renderHistory(); }catch(e){}
 // ホロスコープから渡された生年月日があれば受け取り、運勢占断を開いて入れておく
 (function receiveFromHoroscope(){
   const q=new URLSearchParams(location.search);
