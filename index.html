@@ -229,6 +229,7 @@ background:radial-gradient(circle at 80% 20%,rgba(201,164,76,.12),transparent 70
   </header>
   <div class="card">
     <div class="form-title">生まれた日を入れてください</div>
+    <div style="font-size:12.5px;color:var(--washi2);opacity:.65;margin:-10px 0 16px;letter-spacing:.06em;">一度占うと生年月日と性別が記憶され、次からは自動で入ります（この端末のみ）</div>
     <div class="fields">
       <div class="field"><label>生まれた年（西暦 1930〜2030）</label>
         <input type="number" id="y" min="1930" max="2030" placeholder="1990"></div>
@@ -566,6 +567,8 @@ function saveHistory(y,m,d,type){
     h.unshift({y:y,m:m,d:d,type:type});
     if(h.length>5)h=h.slice(0,5);
     localStorage.setItem('sanmei_history',JSON.stringify(h));
+    // 最後に占った生年月日と性別を「自分のプロフィール」として保存（次回から自動入力）
+    localStorage.setItem('sanmei_profile',JSON.stringify({y:y,m:m,d:d,male:isMale}));
   }catch(e){}
   renderHistory();
 }
@@ -574,7 +577,7 @@ function fillHistory(y,m,d){
   document.getElementById('m').value=m;
   document.getElementById('d').value=d;
 }
-function clearHistory(){try{localStorage.removeItem('sanmei_history');}catch(e){} renderHistory();}
+function clearHistory(){try{localStorage.removeItem('sanmei_history');localStorage.removeItem('sanmei_profile');}catch(e){} renderHistory();}
 function renderHistory(){
   const el=document.getElementById('history'); if(!el)return;
   const h=loadHistory();
@@ -817,6 +820,18 @@ const ay_=document.getElementById('ay'),am_=document.getElementById('am'),ad_=do
       by_=document.getElementById('by'),bm_=document.getElementById('bm'),bd_=document.getElementById('bd');
 try{ initYearButtons(); initMonthButtons(); }catch(e){}
 try{ renderHistory(); }catch(e){}
+// 前回占った生年月日・性別を自動入力（この端末のブラウザ内にのみ保存）
+(function autofillProfile(){
+  try{
+    const p=JSON.parse(localStorage.getItem('sanmei_profile')||'null');
+    if(!p||!p.y||!p.m||!p.d)return;
+    const yi=document.getElementById('y'),mi=document.getElementById('m'),di=document.getElementById('d');
+    if(yi&&mi&&di&&!yi.value){ yi.value=p.y; mi.value=p.m; di.value=p.d; }
+    if(typeof p.male==='boolean') setSex(p.male);
+    // 相性診断の「あなた」欄にも入れておく
+    if(ay_&&am_&&ad_&&!ay_.value){ ay_.value=p.y; am_.value=p.m; ad_.value=p.d; }
+  }catch(e){}
+})();
 // ホロスコープから渡された生年月日があれば受け取り、運勢占断を開いて入れておく
 (function receiveFromHoroscope(){
   const q=new URLSearchParams(location.search);
