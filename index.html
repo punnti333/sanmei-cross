@@ -178,6 +178,30 @@ transition:transform .18s,box-shadow .25s,border-color .2s;position:relative;ove
 background:radial-gradient(circle at 80% 20%,rgba(201,164,76,.12),transparent 70%);pointer-events:none;}
 .menu .navcard>*{pointer-events:none;}
 .back{cursor:pointer;}
+/* ===== きょうの運勢（日運） ===== */
+.daily-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:24px;}
+@media(max-width:640px){.daily-grid{grid-template-columns:1fr;}}
+.dcol{border:1px solid rgba(201,164,76,.25);border-radius:12px;padding:18px 16px;text-align:center;
+background:linear-gradient(160deg,var(--sumi2),#191512);}
+.dcol.today{border-color:var(--kin);box-shadow:0 0 0 1px rgba(201,164,76,.35),0 14px 36px rgba(0,0,0,.5);}
+.dcol .dlab{font-family:'Shippori Mincho',serif;font-size:15px;letter-spacing:.25em;color:var(--kin2);}
+.dcol .ddate{font-size:12.5px;color:var(--washi2);opacity:.7;margin-top:3px;letter-spacing:.08em;}
+.dcol .dsig{font-family:'Shippori Mincho',serif;font-size:16px;letter-spacing:.15em;margin-top:12px;}
+.dcol .dmark{font-size:38px;font-weight:800;font-family:'Shippori Mincho',serif;line-height:1.2;}
+.dcol.sig-ao{border-color:rgba(120,200,90,.55);}
+.dcol.sig-ao .dsig,.dcol.sig-ao .dmark{color:#9ed687;text-shadow:0 0 20px rgba(120,200,90,.5);}
+.dcol.sig-ki{border-color:rgba(224,196,120,.6);}
+.dcol.sig-ki .dsig,.dcol.sig-ki .dmark{color:var(--kin2);text-shadow:0 0 20px rgba(224,196,120,.5);}
+.dcol.sig-aka{border-color:rgba(240,80,70,.55);}
+.dcol.sig-aka .dsig,.dcol.sig-aka .dmark{color:#f0857a;text-shadow:0 0 20px rgba(240,80,70,.5);}
+.dcol .dtxt{margin-top:14px;font-size:14.5px;line-height:1.95;color:var(--washi);text-align:left;letter-spacing:.03em;}
+.dcol .dtxt2{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(201,164,76,.3);
+font-size:14.5px;line-height:1.95;color:var(--washi);text-align:left;letter-spacing:.03em;}
+.dcol .dtxt2 .dtlab{font-size:12px;letter-spacing:.25em;color:var(--kin);display:block;margin-bottom:4px;}
+.dcol .dkuu{margin-top:10px;padding:8px 10px;border-radius:8px;background:rgba(155,36,24,.14);
+border:1px solid rgba(155,36,24,.45);font-size:13px;line-height:1.8;color:#f0a89f;text-align:left;letter-spacing:.03em;}
+.dcol .dchip{display:inline-block;margin-top:10px;font-size:12px;padding:4px 10px;border-radius:20px;
+border:1px solid rgba(155,36,24,.7);color:#f0857a;background:rgba(155,36,24,.15);letter-spacing:.08em;}
 </style>
 </head>
 <body>
@@ -195,6 +219,11 @@ background:radial-gradient(circle at 80% 20%,rgba(201,164,76,.12),transparent 70
       <div class="mn">運勢占断</div>
       <div class="mt">いま<span class="k">進む</span>べき？</div>
       <div class="md">生まれた日から、その年のあなたの運気を読み解きます。挑戦していい年か、ぐっとこらえる年か。信号の色が、今のあなたを教えてくれます。</div>
+    </div>
+    <div class="navcard" onclick="goDaily()">
+      <div class="mn">日々の運と縁</div>
+      <div class="mt">今日の<span class="k">運勢</span></div>
+      <div class="md">昨日・今日・明日。三日分の運気を信号でお伝えします。毎日開くだけで、その日の過ごし方が分かります。</div>
     </div>
     <div class="navcard" onclick="go('aishou')">
       <div class="mn">相性診断</div>
@@ -264,6 +293,31 @@ background:radial-gradient(circle at 80% 20%,rgba(201,164,76,.12),transparent 70
   <div id="history" class="hist-wrap"></div>
   <div id="result"></div>
   <div class="disclaimer">生まれた日から、その年に「進んでいい・気をつける・待つべき」のどれかを信号でお伝えします。<br>※持ち味の月星座は、生まれた日の正午時点で計算しています。</div>
+  <footer>― 三命 ―</footer>
+  </div>
+
+
+  <div id="screen-daily" class="screen">
+  <header>
+    <div class="seal">今日<br>運勢</div>
+    <h1>今日の<span class="k">運勢</span></h1>
+    <div class="sub">昨日・今日・明日を、信号機で</div>
+    <div class="rule"></div>
+    <a class="back" onclick="go('top')">&#9664;　最初の画面にもどる</a>
+  </header>
+  <div class="card">
+    <div class="form-title">生まれた日を入れてください</div>
+    <div style="font-size:12.5px;color:var(--washi2);opacity:.65;margin:-10px 0 16px;letter-spacing:.06em;">一度占うと記憶され、次からは開くだけで表示されます（この端末のみ）</div>
+    <div class="fields">
+      <div class="field"><label>生まれた年（西暦 1930〜2030）</label>
+        <input type="number" id="dy" min="1930" max="2030" placeholder="1990"></div>
+      <div class="field"><label>月</label><input type="number" id="dm" min="1" max="12" placeholder="7"></div>
+      <div class="field"><label>日</label><input type="number" id="dd" min="1" max="31" placeholder="3"></div>
+      <button class="divine-btn" onclick="divineDaily()">三　日　占　断</button>
+    </div>
+  </div>
+  <div id="daily-result"></div>
+  <div class="disclaimer">その日の運気の場所と、その日とあなたの相性。二つを重ねて、一日の過ごし方をお伝えします。</div>
   <footer>― 三命 ―</footer>
   </div>
 
@@ -821,6 +875,209 @@ const ay_=document.getElementById('ay'),am_=document.getElementById('am'),ad_=do
 try{ initYearButtons(); initMonthButtons(); }catch(e){}
 try{ renderHistory(); }catch(e){}
 // 前回占った生年月日・性別を自動入力（この端末のブラウザ内にのみ保存）
+// ===== きょうの運勢（日運）＝日盤九星＋日干の相性＋空亡日 =====
+// 二十四節気（夏至・冬至、日本時間）2023〜2040年
+const SOLSTICE=[
+[2023,6,21,false],[2023,12,22,true],
+[2024,6,21,false],[2024,12,21,true],
+[2025,6,21,false],[2025,12,22,true],
+[2026,6,21,false],[2026,12,22,true],
+[2027,6,22,false],[2027,12,22,true],
+[2028,6,21,false],[2028,12,21,true],
+[2029,6,21,false],[2029,12,21,true],
+[2030,6,21,false],[2030,12,22,true],
+[2031,6,22,false],[2031,12,22,true],
+[2032,6,21,false],[2032,12,21,true],
+[2033,6,21,false],[2033,12,21,true],
+[2034,6,21,false],[2034,12,22,true],
+[2035,6,22,false],[2035,12,22,true],
+[2036,6,21,false],[2036,12,21,true],
+[2037,6,21,false],[2037,12,21,true],
+[2038,6,21,false],[2038,12,22,true],
+[2039,6,22,false],[2039,12,22,true],
+[2040,6,21,false],[2040,12,21,true]];
+const BRANCH12=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const STEM_ELEM=["木","木","火","火","土","土","金","金","水","水"];
+function dayGanzhiIdx(days){return (((DATA.dayBase.num+(days-DATA.dayBase.days))%60)+60)%60;}
+// 冬至（陽遁）・夏至（陰遁）に最も近い甲子の日を切り替え点にする
+const TON_SWITCH=(function(){
+  const sw=[];
+  for(const s of SOLSTICE){
+    const sd=toDays(s[0],s[1],s[2]);
+    const r=dayGanzhiIdx(sd);
+    const prev=sd-r, next=prev+60;
+    const day=(sd-prev<=next-sd)?prev:next;
+    sw.push({day:day,yang:s[3]});
+  }
+  sw.sort(function(a,b){return a.day-b.day;});
+  return sw;
+})();
+function dayStarOf(days){
+  let sw=TON_SWITCH[0];
+  for(const s of TON_SWITCH){ if(s.day<=days) sw=s; else break; }
+  const mod=((days-sw.day)%9+9)%9;
+  return sw.yang ? mod+1 : 9-mod;
+}
+// 宮の文章（9宮×3パターン）
+const D_PALACE={
+"坎":["沈む日。動くより考える日です。ひとりの時間が力になります。",
+"静かに過ごすが勝ちの日。焦って動いても水の中。答えは内側にあります。",
+"深く潜る日。悩みごとはとことん考えてよし。ただし結論は急がないこと。"],
+"坤":["地道が勝つ日。派手なことは実りません。コツコツだけが正解。",
+"足元を固める日。目の前の当たり前を丁寧に。それが一番の近道です。",
+"縁の下の日。目立たない働きが後で評価されます。損に見えて損じゃない。"],
+"震":["勢いの出る日。ただし口が先走ります。言葉は一呼吸おいてから。",
+"スタートに向く日。思い立ったら小さく始めてよし。大風呂敷だけは広げないこと。",
+"声が通る日。伝えたいことは言うが正解。ただし言い方は選ぶこと。"],
+"巽":["縁が動く日。人からの話は、聞くだけ聞いておくのが正解。後で効いてきます。",
+"風向きの変わる日。誘いや紹介はむげに断らないこと。運は人が運んできます。",
+"遠くから知らせが届く日。返事は丁寧に。この日の対応が先々の縁を決めます。"],
+"中宮":["動かない日。攻めても守っても空回り。現状維持が最善です。",
+"真ん中に据わる日。新しいことは仕掛けないのが正解。今あるものの手入れを。",
+"足踏みの日。進まないのはあなたのせいじゃない。そういう日です。"],
+"乾":["忙しくなる日。頼まれごとが増えます。全部は引き受けないこと。",
+"力の入る日。仕事は進みますが、つい強気になりがち。押し一辺倒は禁物。",
+"上を目指す日。責任のある動きが吉。ただし体は思ったより疲れています。"],
+"兌":["楽しみの日。ただし財布と口元がゆるみます。うかれすぎは禁物。",
+"実りを味わう日。ご褒美は遠慮なくどうぞ。ただし明日の分まで使わないこと。",
+"会話がはずむ日。笑いは吉、余計な一言は凶。冗談の線引きだけ忘れずに。"],
+"艮":["切り替えの日。やめる・捨てる・区切るに向いています。始めるのは日を改めて。",
+"立ち止まる日。積み上げてきたものの点検を。手放す判断はこの日が好機です。",
+"変わり目の日。終わるものは終わらせてよし。惜しむより次の器を空けること。"],
+"離":["目立つ日。良くも悪くも見られています。身なりと振る舞いを整えるが正解。",
+"明るみに出る日。隠しごとは持たないこと。堂々としていれば味方が増えます。",
+"光の当たる日。人前に出る用事は好機。ただし足元の影にも一度目を。"]};
+// 愛情運＝日干の生剋。5関係×陽陰×6バージョンの60本
+// バージョンは10日ごとに順繰りで交代。同じ文の再登場はきっかり60日に一度
+const D_STEM={
+hiwa:["心の通いやすい日。好きな人とは会うだけで吉。飾らないままでよし。",
+"安らぎの日。恋人や家族と静かに過ごすのが一番の吉。",
+"息の合う日。デートや誘いは迷わず乗ってよし。",
+"言葉少なでも伝わる日。並んで歩くだけで縁が深まります。",
+"気負いのいらない日。冗談が笑いになる相手が、あなたの縁です。",
+"隣にいるだけで足りる日。特別な演出は無用。いつもの場所でよし。",
+"笑いのツボが合う日。くだらない話ほど縁を強くします。",
+"張り合わずにいられる日。弱音を吐ける相手こそ本物の縁。",
+"再会に吉の日。昔の仲間・旧友からの連絡は良い知らせです。",
+"同じものを食べると縁が深まる日。食卓を囲むが吉。",
+"対等でいられる日。遠慮も気取りも無用。素のままが一番好かれます。",
+"静かな信頼の日。約束をひとつ守るだけで、絆は太くなります。"],
+umareru:["愛される日。向けられた好意は疑わず受け取るが正解。",
+"大切にされていると気づく日。小さな気づかいを見逃さないこと。",
+"想われている日。連絡が来たら脈あり。素直に喜んでよし。",
+"陰であなたを想う人がいる日。感謝はきちんと言葉にすること。",
+"引き寄せの日。出会いを探すなら今日。人の集まる場所に吉。",
+"守られている日。心配してくれる人の言葉は、素直に聞くが正解。",
+"誘われる日。断り癖は今日だけ封印。乗ってみて正解。",
+"優しさが集まる日。甘えるのは弱さじゃない。頼って吉。",
+"褒められる日。謙遜しすぎないこと。ありがとうで受け取るが正解。",
+"気づかいの贈り物が届く日。形は小さくても、心は大きいものです。",
+"味方が現れる日。困りごとは口に出すこと。助けは来ます。",
+"思い出の中で想われる日。ふと届く便りは、縁の生きている証です。"],
+umu:["愛を注ぐ日。尽くして吉。ただし見返りは求めないこと。",
+"相手の話を聴く日。聴き上手が一番の愛情表現になります。",
+"贈って吉の日。ごちそう・プレゼント・ひと手間が心に届きます。",
+"世話を焼きたくなる日。やりすぎ注意。相手の甘え下手も個性です。",
+"励まして吉の日。あなたの一言が相手の力になります。",
+"見守る愛の日。手を出さず、口を出さず、そばにいるだけでよし。",
+"手を貸して吉の日。頼まれる前に動くと、愛情が伝わります。",
+"待つのが愛の日。急かさず、責めず、相手の頃合いを信じること。",
+"手料理・手仕事が吉の日。手間をかけた分だけ心が届きます。",
+"許して吉の日。小さな不満は今日流すこと。器の大きさが縁を守ります。",
+"背中を押して吉の日。迷っている人には大丈夫の一言を。",
+"気づかれない親切が吉の日。見返りのない愛が、一番深く残ります。"],
+koku:["押して良い日。気になる人には自分から。ただし強引は禁物。",
+"リードが吉の日。行き先も段取りもあなたが決めてよし。",
+"告白・誘いに向く日。言うなら今日。勝ち急ぎだけ禁物。",
+"相手の心を動かせる日。言い方は柔らかく、まなざしは真剣に。",
+"距離を縮められる日。次の約束を取り付けるなら今日。",
+"本音を引き出せる日。問いかけはひとつに絞って、あとは待つこと。",
+"誘って吉の日。今夜どう？の一言が縁を動かします。",
+"駆け引きの利く日。少し引いて見せるのも手。追わせて吉。",
+"はっきり言って吉の日。曖昧にしてきた関係に答えを出せます。",
+"ペースを握れる日。焦らずゆっくり。主導権は静かに取るが正解。",
+"一歩踏み込んで吉の日。聞きたかったことは今日聞いてよし。",
+"相手の心をほぐせる日。冗談まじりの本音が一番効きます。"],
+kokare:["振り回されやすい日。恋の駆け引きには乗らないが正解。",
+"気疲れの日。愛情の押し売りには距離を。ひとりの時間も薬です。",
+"相手のわがままが目につく日。真に受けないこと。受け流して吉。",
+"心がすり減りやすい日。会う約束は最小限に。自分を労わるが勝ち。",
+"相手の機嫌に巻き込まれやすい日。あなたのせいにしないこと。",
+"愛情の空回りに注意の日。今日は求めず、休ませ合うが正解。",
+"恋の主導権が向こうにある日。今日は流れに乗るだけでよし。",
+"重たい愛情に注意の日。応えられない期待は、はっきり断って吉。",
+"約束に振り回されやすい日。予定は詰め込まないこと。",
+"愛情の温度差を感じる日。比べないこと。縁の形は人それぞれです。",
+"強い相手に流されやすい日。返事は保留にしてよし。即決は避けること。",
+"心の借りを作りやすい日。おごられ上手も程々に。貸し借りなしが楽です。"]};
+const D_KUU="大きな決めごとは日を改めて。";
+function stemRelText(userE,stemIdx,days){
+  const dayE=STEM_ELEM[stemIdx];
+  const i=(Math.floor(days/10)%6)*2+(stemIdx%2); // 10日ごとに6バージョン順繰り×陽陰
+  if(userE===dayE) return D_STEM.hiwa[i];
+  if(SEI[dayE]===userE) return D_STEM.umareru[i];
+  if(SEI[userE]===dayE) return D_STEM.umu[i];
+  if(KOKU[userE]===dayE) return D_STEM.koku[i];
+  return D_STEM.kokare[i];
+}
+function dailyOne(dateObj,myStar,kuuPair,userE){
+  const dy=dateObj.getFullYear(),dm=dateObj.getMonth()+1,dd=dateObj.getDate();
+  const days=toDays(dy,dm,dd);
+  const idx=dayGanzhiIdx(days);
+  const center=dayStarOf(days);
+  const palace=palaceOf(center,myStar);
+  const base=PALACE_SCORE[palace];
+  const kuu=kuuPair.indexOf(BRANCH12[idx%12])>=0;
+  const final=downMark(base,kuu?1:0);
+  const v=Math.floor(days/9)%3;
+  return {m:dm,d:dd,mark:final,color:SIGNAL[final][0],cls:SIGNAL[final][3],kuu:kuu,
+    txt:D_PALACE[palace][v],
+    txt2:stemRelText(userE,idx%10,days)};
+}
+function goDaily(){
+  go('daily');
+  try{
+    const p=JSON.parse(localStorage.getItem('sanmei_profile')||'null');
+    const yi=document.getElementById('dy'),mi=document.getElementById('dm'),di=document.getElementById('dd');
+    const my=+document.getElementById('y').value,mm=+document.getElementById('m').value,md=+document.getElementById('d').value;
+    if(!yi.value){
+      if(p&&p.y){ yi.value=p.y; mi.value=p.m; di.value=p.d; }
+      else if(validDate(my,mm,md)){ yi.value=my; mi.value=mm; di.value=md; }
+    }
+    if(validDate(+yi.value,+mi.value,+di.value)) divineDaily();
+  }catch(e){}
+}
+function divineDaily(){
+  const y=+document.getElementById('dy').value,m=+document.getElementById('dm').value,d=+document.getElementById('dd').value;
+  if(!validDate(y,m,d)){alert('生まれた日を正しく入力してください（西暦1930〜2030）。');return;}
+  try{
+    const p=JSON.parse(localStorage.getItem('sanmei_profile')||'{}')||{};
+    localStorage.setItem('sanmei_profile',JSON.stringify({y:y,m:m,d:d,male:(typeof p.male==='boolean')?p.male:isMale}));
+  }catch(e){}
+  const myStar=honmeiStar(y,m,d)[0];
+  const kuuPair=dayKuubou(y,m,d);
+  const bidx=dayGanzhiIdx(toDays(y,m,d));
+  const userE=STEM_ELEM[bidx%10];
+  const now=new Date();
+  const labs=['昨日','今日','明日'];
+  let cards='';
+  for(let i=-1;i<=1;i++){
+    const t=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i);
+    const r=dailyOne(t,myStar,kuuPair,userE);
+    cards+='<div class="dcol'+(i===0?' today':'')+' '+r.cls+'">'+
+      '<div class="dlab">'+labs[i+1]+'</div><div class="ddate">'+r.m+'月'+r.d+'日</div>'+
+      '<div class="dsig">'+r.color+'信号</div><div class="dmark">'+r.mark+'</div>'+
+      '<div class="dtxt">'+r.txt+'</div>'+
+      '<div class="dtxt2"><span class="dtlab">愛　情　運</span>'+r.txt2+'</div>'+
+      (r.kuu?'<div class="dkuu">空回りの日。'+D_KUU+'</div>':'')+
+      '</div>';
+  }
+  const el=document.getElementById('daily-result');
+  el.innerHTML='<div class="daily-grid">'+cards+'</div>'+
+    shareRowHTML('今日の運勢は「'+dailyOne(new Date(now.getFullYear(),now.getMonth(),now.getDate()),myStar,kuuPair,userE).color+'信号」でした！ #三命クロス法');
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 (function autofillProfile(){
   try{
     const p=JSON.parse(localStorage.getItem('sanmei_profile')||'null');
