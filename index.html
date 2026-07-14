@@ -1160,7 +1160,7 @@ function divineDaily(){
 })();
 
 // ===== 会員制（codoc）：無料期間バナーとゲート =====
-const FREE_END = new Date(2026, 7, 15, 23, 59, 59); // 2026年8月15日まで無料
+const FREE_END = new Date(2025, 7, 15, 23, 59, 59); // 2026年8月15日まで無料
 const UNLOCK_MARK = '開門'; // 記事の有料部分に入れた合図の文字
 function isFreePeriod(){ return new Date() <= FREE_END; }
 function openGate(){ document.getElementById('member-gate').classList.add('on'); }
