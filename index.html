@@ -1206,6 +1206,25 @@ function closeGate(){
     }
   }catch(e){}
 })();
+// ===== codocの「〜人の購入者がいいねしています」表示を隠す =====
+(function(){
+  const box=document.getElementById('codoc-entry-jRBN6Pyw9w');
+  if(!box) return;
+  function hideLikes(){
+    box.querySelectorAll('*').forEach(function(el){
+      if(el.childElementCount===0 && /いいねして(い|)ま?す/.test(el.textContent||'')){
+        // 文言そのものを含む末端要素を隠す（親も薄枠が残るなら隠す）
+        el.style.display='none';
+        if(el.parentElement && el.parentElement!==box &&
+           (el.parentElement.textContent||'').trim()===(el.textContent||'').trim()){
+          el.parentElement.style.display='none';
+        }
+      }
+    });
+  }
+  hideLikes();
+  new MutationObserver(hideLikes).observe(box,{childList:true,subtree:true,characterData:true});
+})();
 </script>
 </body>
 </html>
