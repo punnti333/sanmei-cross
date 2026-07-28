@@ -107,6 +107,14 @@ padding:12px 0;display:inline-block;}
 .hist-chip{display:inline-block;background:#0f0c0a;border:1px solid rgba(201,164,76,.3);border-radius:20px;padding:8px 14px;margin:4px 8px 0 0;cursor:pointer;font-size:14px;color:var(--washi2);}
 .hist-chip:active{transform:scale(.97);}
 .hist-clear{display:inline-block;margin:4px 0 0;padding:8px 6px;font-size:12px;color:var(--washi2);opacity:.5;cursor:pointer;text-decoration:underline;}
+.people-wrap{margin-top:16px;}
+.pchip{display:inline-block;background:rgba(201,164,76,.10);border:1px solid rgba(201,164,76,.45);
+border-radius:20px;padding:8px 12px 8px 14px;margin:4px 8px 0 0;cursor:pointer;font-size:14px;color:var(--washi);}
+.pchip .pname{font-weight:700;color:var(--kin2);}
+.pchip .pdel{margin-left:8px;opacity:.5;padding:0 4px;}
+.save-btn{display:inline-block;margin-top:12px;padding:10px 18px;border-radius:22px;cursor:pointer;
+border:1px solid rgba(201,164,76,.5);background:rgba(201,164,76,.08);color:var(--washi);
+font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-color:rgba(201,164,76,.25);}
 .chip{display:inline-block;padding:3px 11px;border-radius:20px;font-size:12px;letter-spacing:.1em;margin-top:10px;}
 .chip-gogyo{border:1px solid var(--moku);color:#a8c79b;}
 .chip-change{background:var(--shu2);color:#fff;}
@@ -326,9 +334,11 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         <input type="hidden" id="ty" value="2026">
         <input type="hidden" id="tmode" value="year"></div>
       <button class="divine-btn" onclick="divine()">占　う</button>
+      <button type="button" class="save-btn" onclick="savePerson('y','m','d')">＋ この生年月日に名前をつけて保存</button>
       <button class="divine-btn horo-btn" onclick="toHoroscope()" style="margin-top:12px;background:linear-gradient(180deg,#3a3168,#2c2656);color:var(--kin2);">入力した生年月日でホロスコープを見る</button>
     </div>
   </div>
+  <div id="people" class="people-wrap"></div>
   <div id="history" class="hist-wrap"></div>
   <div id="result"></div>
   <div class="disclaimer">生まれた日から、その年に「進んでいい・気をつける・待つべき」のどれかを信号でお伝えします。<br>※持ち味の月星座は、生まれた日の正午時点で計算しています。</div>
@@ -379,7 +389,9 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         <div class="prow"><input type="number" id="by" placeholder="年 1988">
           <input type="number" id="bm" placeholder="月 4"><input type="number" id="bd" placeholder="日 12"></div></div>
     </div>
-    <button class="divine-btn" onclick="checkAishou()">相　性　を　視　る</button>
+    <div id="people-b" class="people-wrap"></div>
+    <button type="button" class="save-btn" onclick="savePerson('by','bm','bd')">＋ お相手に名前をつけて保存</button>
+    <button class="divine-btn" onclick="checkAishou()" style="margin-top:14px;">相　性　を　視　る</button>
   </div>
   <div id="aishou-result"></div>
   <div class="disclaimer">「表の顔（付き合いやすさ）」と「心の奥（気持ちの通じ方）」の二つの面から、二人の相性を読みます。</div>
@@ -660,7 +672,7 @@ const TYPE16={
 "風風":["風まかせの旅人","自由こそ命。縛られるのが何より苦手で、興味の赴くままに動きます。その身軽さが縁を運んでくる人。とどまるより、流れの中が似合います。"],
 "風水":["おしゃべりな詩人","言葉が達者で場を回すのが上手。でも心の奥は夢見がちなロマンチスト。軽い会話の裏に、深い感受性を隠しています。"],
 "水火":["涙もろい情熱家","人の気持ちに寄り添う優しさと、心の奥に燃える情熱の両方を持つ人。感動しやすく、涙もろい。その共感力が人を動かします。"],
-"水地":["深い湖","物静かで感受性ゆたか。心の奥はどっしり安定していて、簡単には揺れません。静かな水面の下に、確かな強さがある人です。"],
+"水地":["動かない湖","物静かで感受性ゆたか。心の奥はどっしり安定していて、簡単には揺れません。静かな水面の下に、確かな強さがある人です。"],
 "水風":["つかめない霧","優しくて感じがいいのに、どこか本心が見えない。実は心の中で自由に飛び回っています。そのつかめなさが、人を惹きつけます。"],
 "水水":["海そのもの","感受性のかたまり。人の気持ちが流れ込んでくるほど共感力が高い人です。優しさは海の深さ。ただし人の感情に飲まれないよう、線引きも大切に。"]};
 function getType16(y,m,d){
@@ -713,6 +725,48 @@ function renderHistory(){
   h.forEach(function(e){s+='<span class="hist-chip" onclick="fillHistory('+e.y+','+e.m+','+e.d+')">'+e.y+'年'+e.m+'月'+e.d+'日'+(e.type?'／'+e.type:'')+'</span>';});
   s+='<span class="hist-clear" onclick="clearHistory()">履歴を消す</span>';
   el.innerHTML=s;
+}
+
+// ===== 登録した人（名前つきで保存。この端末のブラウザ内にのみ保存されます） =====
+function loadPeople(){try{return JSON.parse(localStorage.getItem('sanmei_people')||'[]');}catch(e){return [];}}
+function savePeople(list){try{localStorage.setItem('sanmei_people',JSON.stringify(list));}catch(e){} renderPeople();}
+function savePerson(iy,im,id){
+  const y=+document.getElementById(iy).value,m=+document.getElementById(im).value,d=+document.getElementById(id).value;
+  if(!validDate(y,m,d)){alert('先に生年月日を入れてください（西暦1930〜2030）。');return;}
+  const nm=(prompt('お名前をどうぞ（例：母、たろう、山田さん）','')||'').trim();
+  if(!nm)return;
+  let list=loadPeople().filter(function(e){return e.name!==nm;});
+  list.unshift({name:nm.slice(0,12),y:y,m:m,d:d});
+  if(list.length>12)list=list.slice(0,12);
+  savePeople(list);
+}
+function delPerson(nm,ev){
+  if(ev&&ev.stopPropagation)ev.stopPropagation();
+  if(!confirm('「'+nm+'」を消しますか？'))return;
+  savePeople(loadPeople().filter(function(e){return e.name!==nm;}));
+}
+function usePerson(nm,who){
+  const p=loadPeople().filter(function(e){return e.name===nm;})[0];
+  if(!p)return;
+  const ids=(who==='b')?['by','bm','bd']:['y','m','d'];
+  document.getElementById(ids[0]).value=p.y;
+  document.getElementById(ids[1]).value=p.m;
+  document.getElementById(ids[2]).value=p.d;
+}
+function renderPeople(){
+  const list=loadPeople();
+  [['people',''],['people-b','b']].forEach(function(pair){
+    const el=document.getElementById(pair[0]); if(!el)return;
+    if(!list.length){el.innerHTML='';return;}
+    const lab=(pair[1]==='b')?'登録した人（タップでお相手に入ります）':'登録した人（タップで呼び出し）';
+    let s='<div class="hist-title">'+lab+'</div>';
+    list.forEach(function(e){
+      s+='<span class="pchip" onclick="usePerson(\''+e.name+'\',\''+pair[1]+'\')">'+
+        '<span class="pname">'+e.name+'</span>　'+e.y+'.'+e.m+'.'+e.d+
+        '<span class="pdel" onclick="delPerson(\''+e.name+'\',event)">×</span></span>';
+    });
+    el.innerHTML=s;
+  });
 }
 
 function go(name){
@@ -954,6 +1008,7 @@ const ay_=document.getElementById('ay'),am_=document.getElementById('am'),ad_=do
       by_=document.getElementById('by'),bm_=document.getElementById('bm'),bd_=document.getElementById('bd');
 try{ initYearButtons(); initMonthButtons(); }catch(e){}
 try{ renderHistory(); }catch(e){}
+try{ renderPeople(); }catch(e){}
 // 前回占った生年月日・性別を自動入力（この端末のブラウザ内にのみ保存）
 // ===== きょうの運勢（日運）＝日盤九星＋日干の相性＋空亡日 =====
 // 二十四節気（夏至・冬至、日本時間）2023〜2040年
