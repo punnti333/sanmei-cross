@@ -177,6 +177,10 @@ transition:transform .18s,box-shadow .25s,border-color .2s;position:relative;ove
 .menu .navcard::after{content:'';position:absolute;top:0;right:0;width:120px;height:120px;
 background:radial-gradient(circle at 80% 20%,rgba(201,164,76,.12),transparent 70%);pointer-events:none;}
 .menu .navcard>*{pointer-events:none;}
+.menu .cta{display:block;margin-top:18px;padding:12px 0;text-align:center;
+background:var(--kin);color:#14110f;border-radius:24px;font-weight:700;font-size:15px;
+letter-spacing:.1em;box-shadow:0 2px 8px rgba(0,0,0,.35);}
+.menu .navcard:active .cta,.menu a:active .cta{background:var(--kin2);}
 .back{cursor:pointer;}
 /* ===== きょうの運勢（日運） ===== */
 .daily-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:24px;}
@@ -224,6 +228,13 @@ background:linear-gradient(160deg,var(--sumi2),#191512);}
 .codoc-wrap button,.codoc-wrap [class*="btn"]{color:#fff !important;}
 .gate-note{text-align:center;color:var(--washi2);font-size:12px;opacity:.75;margin-top:20px;line-height:1.9;}
 </style>
+<script type="text/javascript">
+(function(c,l,a,r,i,t,y){
+c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window, document, "clarity", "script", "xtj32kc7s7");
+</script>
 <script src="https://codoc.jp/js/cms.js" data-usercode="YhOlOTkM4A" defer></script>
 </head>
 <body>
@@ -246,22 +257,22 @@ background:linear-gradient(160deg,var(--sumi2),#191512);}
     <div class="navcard" onclick="go('fortune')">
       <div class="mn">運勢占断</div>
       <div class="mt">いま<span class="k">進む</span>べき？</div>
-      <div class="md">生まれた日から、その年のあなたの運気を読み解きます。挑戦していい年か、ぐっとこらえる年か。信号の色が、今のあなたを教えてくれます。</div>
+      <div class="md">生まれた日から、その年のあなたの運気を読み解きます。挑戦していい年か、ぐっとこらえる年か。信号の色が、今のあなたを教えてくれます。</div><div class="cta">▶　占ってみる</div>
     </div>
     <div class="navcard" onclick="goDaily()">
       <div class="mn">日々の運と縁</div>
       <div class="mt">今日の<span class="k">運勢</span></div>
-      <div class="md">昨日・今日・明日。三日分の運気を信号でお伝えします。毎日開くだけで、その日の過ごし方が分かります。</div>
+      <div class="md">昨日・今日・明日。三日分の運気を信号でお伝えします。毎日開くだけで、その日の過ごし方が分かります。</div><div class="cta">▶　占ってみる</div>
     </div>
     <div class="navcard" onclick="go('aishou')">
       <div class="mn">相性診断</div>
       <div class="mt">あの人との<span class="k">相性</span></div>
-      <div class="md">二人の生まれた日から、表の顔（付き合いやすさ）と心の奥（気持ちの通じ方）の二つで相性を読みます。縁の質がどんなものか、見えてきます。</div>
+      <div class="md">二人の生まれた日から、表の顔（付き合いやすさ）と心の奥（気持ちの通じ方）の二つで相性を読みます。縁の質がどんなものか、見えてきます。</div><div class="cta">▶　占ってみる</div>
     </div>
     <a class="navcard" href="https://punnti333.github.io/horoscope/" target="_blank" rel="noopener" style="text-decoration:none;">
       <div class="mn">ホロスコープ</div>
       <div class="mt">あなたの<span class="k">本質</span></div>
-      <div class="md">西洋占星術であなたの本質を読み解きます。性格のクセ、基本のエネルギー、そして今めぐる星の流れまで。三命クロス法の「本質」を担うパートです。</div>
+      <div class="md">西洋占星術であなたの本質を読み解きます。性格のクセ、基本のエネルギー、そして今めぐる星の流れまで。三命クロス法の「本質」を担うパートです。</div><div class="cta">▶　占ってみる</div>
     </a>
   </div>
   <div class="disclaimer">
@@ -708,6 +719,13 @@ function go(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
+  // 画面が変わったことを Clarity に伝える（4画面のクリックが混ざらないように）
+  try{
+    const u=new URL(location.href);
+    if(name==='top') u.searchParams.delete('s'); else u.searchParams.set('s',name);
+    history.replaceState(null,'',u.pathname+u.search);
+    if(window.clarity) clarity('set','screen',name);
+  }catch(e){}
 }
 
 let isMale=true;
@@ -1242,6 +1260,18 @@ function closeGate(){
   }
   hideLikes();
   new MutationObserver(hideLikes).observe(box,{childList:true,subtree:true,characterData:true});
+})();
+
+// 生年月日の欄をタップしたら中身を全選択（消さずに上書きできるようにする）
+(function selectOnFocus(){
+  var ids=['y','m','d','dy','dm','dd','ay','am','ad','by','bm','bd'];
+  ids.forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var sel=function(){setTimeout(function(){try{el.select();}catch(e){}},0);};
+    el.addEventListener('focus',sel);
+    el.addEventListener('click',sel);
+  });
 })();
 </script>
 </body>
