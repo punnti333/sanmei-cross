@@ -126,6 +126,7 @@ font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-co
 .chip-gogyo{border:1px solid var(--moku);color:#a8c79b;}
 .chip-change{background:var(--shu2);color:#fff;}
 .chip-kuubou{background:#000;border:1px solid var(--shu);color:#f0857a;font-weight:700;}
+.chip-kokoro{background:#0d1620;border:1px solid var(--ai);color:#8fb3d4;font-weight:700;}
 .chip-stable{border:1px solid rgba(201,164,76,.4);color:var(--kin2);}
 .flow{margin-top:18px;background:#0f0c0a;border:1px solid rgba(201,164,76,.14);border-radius:10px;
 padding:16px 20px;font-size:15px;line-height:2.0;color:var(--washi2);}
@@ -269,6 +270,11 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     <b>8月15日まで 無料公開中</b>（あと<span id="fb-days">--</span>日）
     <span class="fb-sub">以降は月330円の会員制になります</span>
     <span style="display:inline-block;margin-top:9px;padding:10px 26px;background:#c9a44c;color:#14110f;border-radius:24px;font-weight:700;font-size:15px;letter-spacing:.08em;box-shadow:0 2px 8px rgba(0,0,0,.35)">▶ 会員登録はこちら</span>
+  </div>
+  <div id="kaitei-note" style="display:none;margin:12px auto 0;max-width:560px;text-align:center;
+    font-size:14px;color:var(--washi2);letter-spacing:.04em;line-height:1.7;padding:10px 14px;
+    border:1px solid rgba(201,164,76,.35);border-radius:10px;background:rgba(201,164,76,.06);">
+    ※精度を向上させたため一部の方の信号が変わっています。
   </div>
   <header>
     <div class="seal">三命<br>占断</div>
@@ -564,6 +570,25 @@ function dayKuubou(y,m,d){
 function isKuubouYear(y,m,d,ty){ return dayKuubou(y,m,d).indexOf(DATA.yearZhi[ty])>=0; }
 const SCALE=["◎","○","△","▲","×"];
 function downMark(mark,steps){const i=SCALE.indexOf(mark);return SCALE[Math.min(i+steps,SCALE.length-1)];}
+// 暗剣殺：その盤で五黄土星が入る宮の「真向かい」に自分の星が回座しているか
+// 五黄が中宮の盤（中宮星が五黄）には暗剣殺なし
+function isAnken(center,myPalace){
+  const gp=palaceOf(center,5);
+  if(gp==='中宮') return false;
+  return OPP_PAL[gp]===myPalace;
+}
+// 傾斜宮を「場所」として見る凶殺判定（表示のみ、信号は下げない）
+// 五黄がその盤で傾斜宮に回座＝心の五黄殺　／　傾斜宮が五黄の真向かい＝心の暗剣殺
+// 五黄が中宮の盤には五黄殺・暗剣殺なし
+function keishaSatsu(y,m,d,male,center){
+  const kp=keishaPalace(y,m,d,male);
+  const gp=palaceOf(center,5);
+  if(gp==='中宮') return null;
+  if(kp===gp) return 'goou';
+  if(kp===OPP_PAL[gp]) return 'anken';
+  return null;
+}
+// 鑑定方式改定の注記（会員登録バナーの下に表示。無料期間の終了＝8月15日を過ぎると自動で消える）
 const NINE={1:["一白水星","水","清水","しみず","深慮・受容。内に静かに蓄える人","流れる水"],
 2:["二黒土星","土","大地","だいち","堅実・育成。人を支え地を耕す人","優しい土"],
 3:["三碧木星","木","若草","わかくさ","始動・発信。若々しく走り出す人","勢いの木"],
@@ -899,7 +924,9 @@ function divine(){
   const center=yearCenter(ty),palace=palaceOf(center,star),base=PALACE_SCORE[palace];
   const ch=isChange(y,m,d,isMale,ty),change=ch[0],startAge=ch[1];
   const kuubou=isKuubouYear(y,m,d,ty);
-  const steps=(kuubou?2:0)+(change?1:0),final=downMark(base,steps);
+  const anken=isAnken(center,palace);
+  const ksatsu=keishaSatsu(y,m,d,isMale,center);
+  const steps=(kuubou?2:0)+(anken?1:0),final=downMark(base,steps);
   const sg=SIGNAL[final],color=sg[0],verdict=sg[1],cls=sg[3];
   let gloss=sg[2],punch=sg[4];
   if(steps>0 && final==='▲' && (base==='◎'||base==='○')){
@@ -908,10 +935,13 @@ function divine(){
   }
   let chips='';
   if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
+  if(anken) chips+='<span class="chip chip-kuubou">暗剣殺の年（思わぬ横やり・アクシデントに注意）</span> ';
+  if(ksatsu==='goou') chips+='<span class="chip chip-kokoro">心が五黄殺の年（自分から招く乱れに注意）</span> ';
+  if(ksatsu==='anken') chips+='<span class="chip chip-kokoro">心が暗剣殺の年（迷い・判断の曇りに注意）</span> ';
   if(change) chips+='<span class="chip chip-change">人生の切り替え時期</span> ';
-  if(!kuubou&&!change) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
+  if(!kuubou&&!change&&!anken&&!ksatsu) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
   let st; if(steps===0) st='特に重なる時期はなく、運気のまま読めます';
-  else{let p=[];if(kuubou)p.push('運気の沈む時期');if(change)p.push('切り替えの時期');st=p.join('と')+'が重なっているぶん、慎重にいきたい一年です';}
+  else{let p=[];if(kuubou)p.push('運気の沈む時期');if(anken)p.push('暗剣殺（思わぬ横やりが入りやすい年）');st=p.join('と')+'が重なっているぶん、慎重にいきたい一年です';}
   const pp = steps===0 ? PALACE_PUNCH[palace]
     : '土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただし今年は時期の重なりがあるぶん、その力を大きく使う年ではありません。信号の判定を目安にしてください。';
   // 最後のまとめ：青なら過ごし方、黄・赤なら来年の見通し
@@ -920,9 +950,10 @@ function divine(){
     flowMsg='【今年の使い方】'+PALACE_DO[palace];
   }else{
     const nty=ty+1;
-    const npal=palaceOf(yearCenter(nty),star), nbase=PALACE_SCORE[npal];
-    const nch=isChange(y,m,d,isMale,nty)[0], nku=isKuubouYear(y,m,d,nty);
-    const nfinal=downMark(nbase,(nku?2:0)+(nch?1:0));
+    const ncen=yearCenter(nty);
+    const npal=palaceOf(ncen,star), nbase=PALACE_SCORE[npal];
+    const nanken=isAnken(ncen,npal), nku=isKuubouYear(y,m,d,nty);
+    const nfinal=downMark(nbase,(nku?2:0)+(nanken?1:0));
     const ncolor=SIGNAL[nfinal][0], ntop=PALACE_MEAN[npal].split('・')[0];
     if(ncolor==='青') flowMsg='【来年の見通し】'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
     else if(ncolor==='黄') flowMsg='【来年の見通し】'+nty+'年は「'+ntop+'」で黄信号。流れは少しずつ上向きます。今年は土台づくりに使ってください。';
@@ -951,8 +982,13 @@ function divine(){
   const tgt=shiftMonth(baseMonth.yearAdj,baseMonth.setsuMonth,(pickedMonth==='last')?-1:(pickedMonth==='next')?1:0);
   const cal=setsuToCalMonth(tgt.setsuMonth);
   const palace=monthPalaceByIndex(star,tgt.yearAdj,tgt.setsuMonth);
+  const mzhi=DATA.yearZhi[tgt.yearAdj]||"子";
+  const mcen=monthCenter(mzhi,tgt.setsuMonth);
+  const anken=isAnken(mcen,palace);
+  const ksatsu=keishaSatsu(y,m,d,isMale,mcen);
   const base=PALACE_SCORE[palace];
-  const sg=SIGNAL_M[base],color=sg[0],verdict=sg[1],gloss=sg[2],cls=sg[3],punch=sg[4];
+  const mfinal=downMark(base,anken?1:0);
+  const sg=SIGNAL_M[mfinal],color=sg[0],verdict=sg[1],gloss=sg[2],cls=sg[3],punch=sg[4];
   const label=(pickedMonth==='last')?'先月':(pickedMonth==='next')?'来月':'今月';
   // まとめ：青なら使い方、黄・赤なら翌月の見通し
   let flowMsg;
@@ -962,7 +998,9 @@ function divine(){
     const nx=shiftMonth(tgt.yearAdj,tgt.setsuMonth,1);
     const ncal=setsuToCalMonth(nx.setsuMonth);
     const npal=monthPalaceByIndex(star,nx.yearAdj,nx.setsuMonth);
-    const nbase=PALACE_SCORE[npal];
+    const nzhi=DATA.yearZhi[nx.yearAdj]||"子";
+    const nanken=isAnken(monthCenter(nzhi,nx.setsuMonth),npal);
+    const nbase=downMark(PALACE_SCORE[npal],nanken?1:0);
     const ncolor=SIGNAL_M[nbase][0], ntop=PALACE_MEAN[npal].split('・')[0];
     if(ncolor==='青') flowMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」の運気に変わり、青信号になります。今はひと休みして、翌月に動くのが得策です。';
     else if(ncolor==='黄') flowMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」で黄信号。流れは少しずつ変わります。いまのうちに準備を。';
@@ -970,16 +1008,19 @@ function divine(){
   }
   const el=document.getElementById('result');
   el.innerHTML='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
-    '<div class="mark">'+base+'</div><div class="verdict">'+verdict+'</div>'+
+    '<div class="mark">'+mfinal+'</div><div class="verdict">'+verdict+'</div>'+
     '<div class="punch">'+punch+'</div><div class="gloss">'+gloss+'</div></div>'+
     '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
     '<div class="type-name">「'+t16.name+'」タイプ</div>'+
     '<div class="note">'+t16.body+'</div>'+
     '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div></div>'+
     '<div class="detail"><div class="lab">'+label+'（'+cal+'月）のあなたの運気</div>'+
-    '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span></div>'+
+    '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+mfinal+'</span></div>'+
     '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
-    '<div class="note">'+PALACE_PUNCH[palace]+'</div></div></div>'+
+    '<div class="note">'+(anken?'土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただしこの月は暗剣殺が重なるため、その力を大きく使う月ではありません。信号の判定を目安にしてください。':PALACE_PUNCH[palace])+'</div>'+
+    (anken?'<span class="chip chip-kuubou">暗剣殺の月（思わぬ横やり・アクシデントに注意）</span> ':'')+
+    (ksatsu==='goou'?'<span class="chip chip-kokoro">心が五黄殺の月（自分から招く乱れに注意）</span>':'')+
+    (ksatsu==='anken'?'<span class="chip chip-kokoro">心が暗剣殺の月（迷い・判断の曇りに注意）</span>':'')+'</div></div>'+
     '<div class="flow">'+flowMsg+'</div>'+
     shareRowHTML('私は「'+t16.name+'」タイプ。'+label+'（'+cal+'月）は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
   el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
@@ -1340,6 +1381,7 @@ function closeGate(){
       const days=Math.max(0, Math.ceil((FREE_END - new Date())/86400000));
       document.getElementById('fb-days').textContent=days;
       banner.style.display='block';
+      const kn=document.getElementById('kaitei-note'); if(kn) kn.style.display='block';
       document.getElementById('gate-msg').innerHTML='会員のご案内<br>（8月15日までは全機能を無料でお使いいただけます）';
     }else{
       // 無料期間終了後：関所を立てる
