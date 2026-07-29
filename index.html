@@ -112,6 +112,13 @@ padding:12px 0;display:inline-block;}
 border-radius:20px;padding:8px 12px 8px 14px;margin:4px 8px 0 0;cursor:pointer;font-size:14px;color:var(--washi);}
 .pchip .pname{font-weight:700;color:var(--kin2);}
 .pchip .pdel{margin-left:8px;opacity:.5;padding:0 4px;}
+.again-row{display:flex;gap:10px;margin:24px 0 6px;}
+.again-btn{flex:1;display:block;padding:16px 0;padding:16px 0;text-align:center;cursor:pointer;
+border:1px solid rgba(201,164,76,.5);border-radius:26px;background:rgba(201,164,76,.10);
+color:var(--kin2);font-family:'Shippori Mincho',serif;font-size:15px;font-weight:700;letter-spacing:.08em;
+-webkit-tap-highlight-color:rgba(201,164,76,.25);}
+.again-btn:active{background:rgba(201,164,76,.2);}
+.ab-top{color:var(--washi2);border-color:rgba(236,227,208,.25);background:rgba(236,227,208,.05);}
 .save-btn{display:inline-block;margin-top:12px;padding:10px 18px;border-radius:22px;cursor:pointer;
 border:1px solid rgba(201,164,76,.5);background:rgba(201,164,76,.08);color:var(--washi);
 font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-color:rgba(201,164,76,.25);}
@@ -341,6 +348,7 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
   <div id="people" class="people-wrap"></div>
   <div id="history" class="hist-wrap"></div>
   <div id="result"></div>
+  <div class="again-row" id="again-result" style="display:none;"><button type="button" class="again-btn" onclick="againTo('y')">▲　別の人で占う</button><button type="button" class="again-btn ab-top" onclick="go('top')">◀　最初の画面へ</button></div>
   <div class="disclaimer">生まれた日から、その年に「進んでいい・気をつける・待つべき」のどれかを信号でお伝えします。<br>※持ち味の月星座は、生まれた日の正午時点で計算しています。</div>
   <footer>― 三命 ―</footer>
   </div>
@@ -366,6 +374,7 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     </div>
   </div>
   <div id="daily-result"></div>
+  <div class="again-row" id="again-daily-result" style="display:none;"><button type="button" class="again-btn" onclick="againTo('dy')">▲　別の人で占う</button><button type="button" class="again-btn ab-top" onclick="go('top')">◀　最初の画面へ</button></div>
   <div class="disclaimer">その日の運気の場所と、その日とあなたの相性。二つを重ねて、一日の過ごし方をお伝えします。</div>
   <footer>― 三命 ―</footer>
   </div>
@@ -394,6 +403,7 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     <button class="divine-btn" onclick="checkAishou()" style="margin-top:14px;">相　性　を　視　る</button>
   </div>
   <div id="aishou-result"></div>
+  <div class="again-row" id="again-aishou-result" style="display:none;"><button type="button" class="again-btn" onclick="againTo('ay')">▲　別の人で占う</button><button type="button" class="again-btn ab-top" onclick="go('top')">◀　最初の画面へ</button></div>
   <div class="disclaimer">「表の顔（付き合いやすさ）」と「心の奥（気持ちの通じ方）」の二つの面から、二人の相性を読みます。</div>
   <footer>― 三命 ―</footer>
   </div>
@@ -769,6 +779,22 @@ function renderPeople(){
   });
 }
 
+function showAgain(rid){
+  const b=document.getElementById('again-'+rid);
+  if(!b)return;
+  b.style.display='flex';
+  // 「結果をシェア」の行があれば、その上に置く
+  const res=document.getElementById(rid);
+  const share=res?res.querySelector('.share-row'):null;
+  if(share&&share.parentNode)share.parentNode.insertBefore(b,share);
+}
+function againTo(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(function(){try{el.focus();el.select();}catch(e){}},450);
+}
+
 function go(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
@@ -896,7 +922,7 @@ function divine(){
     '<div class="note">'+pp+'</div>'+chips+'</div></div>'+
     '<div class="flow">'+flowMsg+'</div>'+
     shareRowHTML('私は「'+t16.name+'」タイプ。'+ty+'年は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
-  el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
   saveHistory(y,m,d,t16.name);
 }function divineMonth(y,m,d){
   const hs=honmeiStar(y,m,d),star=hs[0],info=NINE[star];
@@ -936,7 +962,7 @@ function divine(){
     '<div class="note">'+PALACE_PUNCH[palace]+'</div></div></div>'+
     '<div class="flow">'+flowMsg+'</div>'+
     shareRowHTML('私は「'+t16.name+'」タイプ。'+label+'（'+cal+'月）は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
-  el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
   saveHistory(y,m,d,t16.name);
 }
 
@@ -1002,7 +1028,7 @@ function checkAishou(){
     '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">二人の縁は ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+'</div>'+
     shareRowHTML('私たちの相性は'+starStr+'「'+verdict+'」でした！ #三命クロス法');
   const el=document.getElementById('aishou-result');
-  el.innerHTML=html; el.classList.add('show'); el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.innerHTML=html; el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 const ay_=document.getElementById('ay'),am_=document.getElementById('am'),ad_=document.getElementById('ad'),
       by_=document.getElementById('by'),bm_=document.getElementById('bm'),bd_=document.getElementById('bd');
@@ -1228,6 +1254,7 @@ function divineDaily(){
   const el=document.getElementById('daily-result');
   el.innerHTML='<div class="daily-grid">'+cards+'</div>'+
     shareRowHTML('今日の運勢は「'+dailyOne(new Date(now.getFullYear(),now.getMonth(),now.getDate()),myStar,kuuPair,userE).color+'信号」でした！ #三命クロス法');
+  showAgain('daily-result');
   el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
