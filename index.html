@@ -151,6 +151,15 @@ padding:16px 20px;font-size:15px;line-height:2.0;color:var(--washi2);}
 .pcard{background:linear-gradient(160deg,#191512,#0f0c0a);border:1px solid rgba(201,164,76,.18);border-radius:10px;padding:16px 18px;}
 .pcard .ph{font-size:13px;letter-spacing:.2em;color:var(--kin);margin-bottom:8px;}
 .pcard .pl{font-size:17px;color:var(--washi);line-height:2.05;}
+.pcard .kanji{font-family:'Shippori Mincho',serif;font-size:56px;font-weight:800;color:var(--kin2);line-height:1;float:left;margin:2px 16px 4px 0;}
+.pcard .kname{font-family:'Shippori Mincho',serif;font-size:30px;color:var(--kin2);font-weight:800;color:var(--washi);letter-spacing:.08em;}
+.pcard .kyomi{font-size:12px;margin-bottom:2px;color:var(--washi2);opacity:.6;letter-spacing:.14em;margin-top:2px;}
+.pcard .kdesc{padding-top:12px;font-size:15px;line-height:1.95;color:var(--washi2);}
+.pcard .sub{margin-top:12px;padding-top:10px;border-top:1px solid rgba(201,164,76,.15);font-size:12.5px;color:var(--washi2);opacity:.55;letter-spacing:.05em;line-height:1.8;}
+.stem-line{margin-top:14px;padding:14px 18px;border-radius:10px;background:rgba(201,164,76,.07);
+border:1px solid rgba(201,164,76,.22);font-size:15px;line-height:1.9;color:var(--washi);}
+.stem-line b{color:var(--kin2);}
+.stem-line.gogo{background:rgba(192,57,43,.12);border-color:rgba(224,196,120,.5);}
 .pcard .pl b{color:var(--kin2);font-weight:700;}
 .verdict-box{margin-top:20px;background:#0f0c0a;border:1px solid rgba(201,164,76,.2);border-radius:10px;padding:20px 22px;}
 .verdict-box .vstars{font-size:clamp(30px,7vw,42px);letter-spacing:6px;color:var(--kin2);
@@ -603,6 +612,17 @@ const SIGNAL_M={"◎":["青","進め","動いていい月。挑戦や新しい�
 "▲":["黄","気をつけて","慎重にいきたい月。大きな決断は急がずに","sig-ki","大きな決断は、もう少し待ったほうがいい月です"],
 "×":["赤","待つとき","守りの月。動かず力をためる時期です","sig-aka","勝負どきではありません。守って力をためる月です"]};
 const PALACE_GOGYO={"坎":"水","坤":"土","震":"木","巽":"木","乾":"金","兌":"金","艮":"土","離":"火","中宮":"土"};
+// ===== 日干（八字の日主）=====
+const STEM10=[["甲","大樹","きのえ","木","まっすぐ伸びる人。融通は利かないが、そこが信頼される。折れることはあっても、曲がらない。"],
+["乙","草花","きのと","木","しなやかに合わせる人。風になびいて見えて、根は簡単に抜けない。柔らかさが強さ。"],
+["丙","太陽","ひのえ","火","いるだけで場が明るくなる人。隠しごとが苦手で、裏表がない。"],
+["丁","灯火","ひのと","火","必要な人だけを照らす人。誰にでもではなく、選んだ相手を静かに温める。"],
+["戊","山","つちのえ","土","どっしり動かない人。頼られる。急かされても自分の速さを崩さない。"],
+["己","畑","つちのと","土","人を育てる人。自分より、まわりが実ることを喜ぶ。じっくり手をかける。"],
+["庚","刀剣","かのえ","金","筋を通す人。白黒はっきりつける。切れ味が強みでも、時に刺さる。"],
+["辛","宝石","かのと","金","磨かれた美意識を持つ人。細部にこだわり、小さな傷にも気づいてしまう。"],
+["壬","大河","みずのえ","水","流れを止めない人。器が大きく、来る者を拒まない。"],
+["癸","雨露","みずのと","水","しみ込むように寄り添う人。目立たないが、いつのまにか届いている。"]];
 const KEISHA_NOTE={"坎":"ひとりで深く考えるタイプ。本心はそっと胸にしまう",
 "坤":"面倒見がよく、相手を受け止める優しさがある",
 "震":"内に瞬発力。気持ちがすぐ表に出て動き出す",
@@ -971,8 +991,28 @@ function persona(y,m,d){
   const gm=getsumeiStar(y,m,d);
   const kp=keishaPalace(y,m,d);
   const sign=sunSign(m,d);
-  return {hb:hb, info:NINE[hb], sunGogyo:NINE[hb][1], getsu:gm, getsuGogyo:NINE[gm][1], keisha:kp, moonGogyo:PALACE_GOGYO[kp], sign:sign};
+  const st=dayGanzhiIdx(toDays(y,m,d))%10;
+  return {hb:hb, info:NINE[hb], sunGogyo:NINE[hb][1], getsu:gm, getsuGogyo:NINE[gm][1], keisha:kp, moonGogyo:PALACE_GOGYO[kp], sign:sign, stem:st};
 }
+// 干合（甲己・乙庚・丙辛・丁壬・戊癸）＝十干の差が5
+const REL_MARK={"相生":"◎","比和":"○","相剋":"✕"};
+function relMark(n){return (REL_MARK[n]||'')+'\u3000'+n;}
+function isGogo(a,b){return Math.abs(a-b)===5;}
+function stemCardHTML(head,P){
+  const t=STEM10[P.stem];
+  return '<div class="pcard"><div class="ph">'+head+'</div>'+
+    '<div class="kname">'+t[1]+'</div><div class="kyomi">'+t[3]+'</div>'+
+    '<div class="kdesc">'+t[4]+'</div>'+
+    '<div class="sub">'+P.sign+'　／　'+P.info[5]+'</div></div>';
+}
+function stemLineHTML(A,B){
+  if(!isGogo(A.stem,B.stem))return '';
+  const a=STEM10[A.stem], b=STEM10[B.stem];
+  return '<div class="stem-line gogo"><b>'+a[1]+'</b>　×　<b>'+b[1]+'</b>　── <b>干合</b>。'+
+    '十とおりのうち一組しかない、惹かれ合う特別な結びつきです。理屈ぬきに気になる相手。'+
+    '<br>この縁に、星を一つ足しました。</div>';
+}
+
 function checkAishou(){
   const ay=+ay_.value,am=+am_.value,ad=+ad_.value,by=+by_.value,bm=+bm_.value,bd=+bd_.value;
   if(!validDate(ay,am,ad)||!validDate(by,bm,bd)){alert('二人の生年月日を正しく入力してください（西暦1930〜2030）。');return;}
@@ -985,7 +1025,7 @@ function checkAishou(){
   // 星5段階に変換。相生がからむと★4以上、比和どまりなら★3、相剋が入ると★2以下
   let tiebreak=null;
   let stars;
-  if(score>=4) stars=5;        // 相生＋相生
+  if(score>=4) stars=4;        // 相生＋相生。★5は加点（同じ心のかたち・干合）が重なったときだけ
   else if(score>=3) stars=4;   // 相生＋比和
   else if(score>=1) stars=3;   // 比和＋比和
   else if(score===0){          // 相生＋相剋＝五分五分 → 月命星で決める
@@ -1001,6 +1041,8 @@ function checkAishou(){
   // 傾斜の宮が同じ（巽宮×巽宮など）＝心の奥で響き合う特別な縁。星を1つ増やす（上限★5）
   const sameKeisha = (A.keisha===B.keisha);
   if(sameKeisha){ stars=Math.min(5, stars+1); }
+  const gogo=isGogo(A.stem,B.stem);
+  if(gogo){ stars=Math.min(5, stars+1); }
   const starStr='★★★★★'.slice(0,stars)+'☆☆☆☆☆'.slice(0,5-stars);
   let verdict, vt, punch;
   if(stars===5){verdict="とても良い縁";punch="この相性は、めったにありません。大事にする価値があります";vt="表でも心の奥でも自然に響き合える、めぐまれた相性です。一緒にいるほど分かり合えて、長く続くほど深まります。";}
@@ -1009,23 +1051,24 @@ function checkAishou(){
   else if(stars===2){verdict="磨き合う縁";punch="ぶつかる相手ほど、自分を伸ばしてくれます";vt="ぶつかることもありますが、その分おたがいを成長させ合える刺激的な相性。違いを面白がれると強くなります。";}
   else{verdict="向き合う縁";punch="手強い相手。でも認め合えたら、誰より強い絆になります";vt="すれ違いが起きやすい組み合わせ。でも、相手を変えようとせず「そういう人」と受け止め合えたとき、誰よりも強い絆になります。";}
   const tbnote = tiebreak ? '<div class="relnote" style="margin-top:14px;opacity:.9">表と心の奥が拮抗したため、生まれ月の気（'+A.getsuGogyo+'×'+B.getsuGogyo+'＝'+tiebreak[0]+'）で最終判断しました。</div>' : '';
-  const keishaNote = sameKeisha ? '<div class="relnote" style="margin-top:14px;opacity:.9">二人とも同じ'+A.keisha+'宮傾斜。同郷の人に出会ったような、深いシンパシーを感じるご縁です。</div>' : '';
+  // ✕が出ているのに星が多いとき、その理由を一行添える
+  const kx=(sun[0]==="相剋"?1:0)+(moon[0]==="相剋"?1:0);
+  let gapNote='';
+  if(kx===1&&stars>=3) gapNote='<div class="relnote" style="margin-top:14px;opacity:.9">片方に✕がありますが、もう一方が強く支えています。</div>';
+  else if(kx===2&&stars>=3) gapNote='<div class="relnote" style="margin-top:14px;opacity:.9">✕が二つ出ていますが、心の奥の響き合いが、それを補っています。</div>';
+  const keishaNote = sameKeisha ? '<div class="relnote" style="margin-top:14px;opacity:.9">心の奥のかたちが、二人とも同じです。同郷の人に出会ったような、深いシンパシーを感じるご縁。</div>' : '';
   const html=
     '<div class="cross-grid">'+
       '<div class="cross-card"><div class="axis"><span class="sym">☀</span>表の顔の相性<span class="axis-sub">ふだんの付き合いやすさ</span></div>'+
         '<div class="pairing">'+A.info[0]+'（'+A.sunGogyo+'）　×　'+B.info[0]+'（'+B.sunGogyo+'）</div>'+
-        '<div class="rel '+sun[1]+'">'+sun[0]+'</div><div class="relnote">'+sun[2]+'。</div></div>'+
+        '<div class="rel '+sun[1]+'">'+relMark(sun[0])+'</div><div class="relnote">'+sun[2]+'。</div></div>'+
       '<div class="cross-card"><div class="axis"><span class="sym">☾</span>心の奥の相性<span class="axis-sub">気持ちの通じ方</span></div>'+
-        '<div class="pairing">'+A.keisha+'宮傾斜（'+A.moonGogyo+'）　×　'+B.keisha+'宮傾斜（'+B.moonGogyo+'）</div>'+
-        '<div class="rel '+moon[1]+'">'+moon[0]+'</div><div class="relnote">'+moon[2]+'。</div></div>'+
+        '<div class="pairing">'+A.moonGogyo+'　×　'+B.moonGogyo+'</div>'+
+        '<div class="rel '+moon[1]+'">'+relMark(moon[0])+'</div><div class="relnote">'+moon[2]+'。</div></div>'+
     '</div>'+
-    '<div class="persons-line">'+
-      '<div class="pcard"><div class="ph">あなた</div><div class="pl">'+
-        '持ち味：<b>'+A.info[5]+'（'+A.info[2]+'・'+A.info[0]+'）</b><br>心の奥：<b>'+A.keisha+'宮傾斜</b>　'+KEISHA_NOTE[A.keisha]+'<br>本質の彩り：<b>'+A.sign+'</b>らしく'+SIGN_NOTE[A.sign]+'</div></div>'+
-      '<div class="pcard"><div class="ph">お相手</div><div class="pl">'+
-        '持ち味：<b>'+B.info[5]+'（'+B.info[2]+'・'+B.info[0]+'）</b><br>心の奥：<b>'+B.keisha+'宮傾斜</b>　'+KEISHA_NOTE[B.keisha]+'<br>本質の彩り：<b>'+B.sign+'</b>らしく'+SIGN_NOTE[B.sign]+'</div></div>'+
-    '</div>'+
-    '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">二人の縁は ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+'</div>'+
+    '<div class="persons-line">'+stemCardHTML('あなた',A)+stemCardHTML('お相手',B)+'</div>'+
+    stemLineHTML(A,B)+
+    '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">二人の縁は ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+gapNote+'</div>'+
     shareRowHTML('私たちの相性は'+starStr+'「'+verdict+'」でした！ #三命クロス法');
   const el=document.getElementById('aishou-result');
   el.innerHTML=html; el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
