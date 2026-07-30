@@ -1078,6 +1078,7 @@ function checkAishou(){
   let score=rank[sun[0]]+rank[moon[0]];
   // 星5段階に変換。相生がからむと★4以上、比和どまりなら★3、相剋が入ると★2以下
   let tiebreak=null;
+  let monthSupport=null;
   let stars;
   if(score>=4) stars=4;        // 相生＋相生。★5は加点（同じ心のかたち・干合）が重なったときだけ
   else if(score>=3) stars=4;   // 相生＋比和
@@ -1091,12 +1092,22 @@ function checkAishou(){
   }
   else if(score>=-2) stars=2;  // 比和＋相剋
   else stars=1;                // 相剋＋相剋
+  // 本命星・傾斜のどちらにも相生がなく、相剋を含む場合は月命星を補助判断に使う
+  if(sun[0]!=="相生"&&moon[0]!=="相生"&&(sun[0]==="相剋"||moon[0]==="相剋")){
+    const gm=aishou(A.getsuGogyo,B.getsuGogyo);
+    if(gm[0]==="相生"){
+      stars=Math.min(5,stars+1);
+      monthSupport=gm;
+    }
+  }
   // 傾斜の宮が同じ（巽宮×巽宮など）＝特別なシンパシー。ただし本命が相剋なら満点にしない
   // 傾斜の宮が同じ（巽宮×巽宮など）＝心の奥で響き合う特別な縁。星を1つ増やす（上限★5）
   const sameKeisha = (A.keisha===B.keisha);
   if(sameKeisha){ stars=Math.min(5, stars+1); }
   const gogo=isGogo(A.stem,B.stem);
   if(gogo){ stars=Math.min(5, stars+1); }
+  // 本命星が相剋の場合は、加点が重なっても満点にはしない
+  if(sun[0]==="相剋"){ stars=Math.min(4,stars); }
   const starStr='★★★★★'.slice(0,stars)+'☆☆☆☆☆'.slice(0,5-stars);
   let verdict, vt, punch;
   if(stars===5){verdict="とても良い縁";punch="この相性は、めったにありません。大事にする価値があります";vt="表でも心の奥でも自然に響き合える、めぐまれた相性です。一緒にいるほど分かり合えて、長く続くほど深まります。";}
@@ -1108,7 +1119,7 @@ function checkAishou(){
   // ✕が出ているのに星が多いとき、その理由を一行添える
   const kx=(sun[0]==="相剋"?1:0)+(moon[0]==="相剋"?1:0);
   let gapNote='';
-  if(kx===1&&stars>=3) gapNote='<div class="relnote" style="margin-top:14px;opacity:.9">片方に✕がありますが、もう一方が強く支えています。</div>';
+  if(kx===1&&stars>=3&&!monthSupport) gapNote='<div class="relnote" style="margin-top:14px;opacity:.9">片方に✕がありますが、もう一方が強く支えています。</div>';
   else if(kx===2&&stars>=3) gapNote='<div class="relnote" style="margin-top:14px;opacity:.9">✕が二つ出ていますが、心の奥の響き合いが、それを補っています。</div>';
   const keishaNote = sameKeisha ? '<div class="relnote" style="margin-top:14px;opacity:.9">心の奥のかたちが、二人とも同じです。同郷の人に出会ったような、深いシンパシーを感じるご縁。</div>' : '';
   const html=
