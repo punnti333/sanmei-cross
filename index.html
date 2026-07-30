@@ -568,6 +568,17 @@ function dayKuubou(y,m,d){
   return KONG[Math.floor(num/10)];
 }
 function isKuubouYear(y,m,d,ty){ return dayKuubou(y,m,d).indexOf(DATA.yearZhi[ty])>=0; }
+const JUNISHI=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const CHU_PAIRS={"子":"午","午":"子","丑":"未","未":"丑","寅":"申","申":"寅","卯":"酉","酉":"卯","辰":"戌","戌":"辰","巳":"亥","亥":"巳"};
+function dayZhi(y,m,d){
+  const days=toDays(y,m,d);
+  const num=(((DATA.dayBase.num+(days-DATA.dayBase.days))%60)+60)%60;
+  return JUNISHI[num%12];
+}
+// 日干支の支と年運の支が冲する年（表示のみ、信号は下げない）
+function isChuYear(y,m,d,ty){
+  return CHU_PAIRS[dayZhi(y,m,d)]===DATA.yearZhi[ty];
+}
 const SCALE=["◎","○","△","▲","×"];
 function downMark(mark,steps){const i=SCALE.indexOf(mark);return SCALE[Math.min(i+steps,SCALE.length-1)];}
 // 暗剣殺：その盤で五黄土星が入る宮の「真向かい」に自分の星が回座しているか
@@ -924,9 +935,10 @@ function divine(){
   const center=yearCenter(ty),palace=palaceOf(center,star),base=PALACE_SCORE[palace];
   const ch=isChange(y,m,d,isMale,ty),change=ch[0],startAge=ch[1];
   const kuubou=isKuubouYear(y,m,d,ty);
+  const chu=isChuYear(y,m,d,ty);
   const anken=isAnken(center,palace);
   const ksatsu=keishaSatsu(y,m,d,isMale,center);
-  const steps=(kuubou?2:0)+(anken?1:0),final=downMark(base,steps);
+  const steps=(kuubou?1:0)+(anken?1:0),final=downMark(base,steps);
   const sg=SIGNAL[final],color=sg[0],verdict=sg[1],cls=sg[3];
   let gloss=sg[2],punch=sg[4];
   if(steps>0 && final==='▲' && (base==='◎'||base==='○')){
@@ -935,11 +947,12 @@ function divine(){
   }
   let chips='';
   if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
+  if(chu) chips+='<span class="chip chip-kuubou">冲の年（人間関係、環境の大きな変化に注意）</span> ';
   if(anken) chips+='<span class="chip chip-kuubou">暗剣殺の年（思わぬ横やり・アクシデントに注意）</span> ';
   if(ksatsu==='goou') chips+='<span class="chip chip-kokoro">心が五黄殺の年（自分から招く乱れに注意）</span> ';
   if(ksatsu==='anken') chips+='<span class="chip chip-kokoro">心が暗剣殺の年（迷い・判断の曇りに注意）</span> ';
   if(change) chips+='<span class="chip chip-change">人生の切り替え時期</span> ';
-  if(!kuubou&&!change&&!anken&&!ksatsu) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
+  if(!kuubou&&!chu&&!change&&!anken&&!ksatsu) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
   let st; if(steps===0) st='特に重なる時期はなく、運気のまま読めます';
   else{let p=[];if(kuubou)p.push('運気の沈む時期');if(anken)p.push('暗剣殺（思わぬ横やりが入りやすい年）');st=p.join('と')+'が重なっているぶん、慎重にいきたい一年です';}
   const pp = steps===0 ? PALACE_PUNCH[palace]
@@ -953,7 +966,7 @@ function divine(){
     const ncen=yearCenter(nty);
     const npal=palaceOf(ncen,star), nbase=PALACE_SCORE[npal];
     const nanken=isAnken(ncen,npal), nku=isKuubouYear(y,m,d,nty);
-    const nfinal=downMark(nbase,(nku?2:0)+(nanken?1:0));
+    const nfinal=downMark(nbase,(nku?1:0)+(nanken?1:0));
     const ncolor=SIGNAL[nfinal][0], ntop=PALACE_MEAN[npal].split('・')[0];
     if(ncolor==='青') flowMsg='【来年の見通し】'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
     else if(ncolor==='黄') flowMsg='【来年の見通し】'+nty+'年は「'+ntop+'」で黄信号。流れは少しずつ上向きます。今年は土台づくりに使ってください。';
