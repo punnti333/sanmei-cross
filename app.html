@@ -86,7 +86,6 @@ font-size:clamp(16px,3.6vw,20px);letter-spacing:.06em;line-height:1.5;color:var(
 border-top:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14);
 padding:12px 0;display:inline-block;}
 .signal-banner .mark{font-size:clamp(50px,12vw,90px);line-height:1;margin-bottom:6px;}
-.signal-banner .gloss{margin-top:12px;font-size:16px;letter-spacing:.1em;opacity:.92;}
 .sig-ao{background:radial-gradient(circle at 50% 0,rgba(91,122,79,.5),var(--sumi2));}
 .sig-ao .verdict,.sig-ao .mark{color:#9ed687;text-shadow:0 0 24px rgba(120,200,90,.5);}
 .sig-ki{background:radial-gradient(circle at 50% 0,rgba(201,164,76,.45),var(--sumi2));}
@@ -1027,6 +1026,38 @@ const PALACE_DO_M={
 "兌":"実りと楽しみの月。人との食事や趣味を楽しんで。出会いの場に、喜びごとが待っています。",
 "震":"始動の月。やりたかったことを一つ始めて、まわりに宣言を。早く動くほど勢いに乗れます。",
 "離":"注目の月。発信や発表に向いています。身なりを整え、見られることを味方につけて。"};
+// ===== 信号の一文（宮ごとに枝分かれ）=====
+// 前半＝勢いの強さ、後半＝宮の性質。組み合わせて一文にする
+const PUNCH_LEAD={"◎":"大きく動いていい年。","○":"動いて大丈夫な年。","△":"準備に回したい年。",
+"▲":"慎重にいきたい年。","×":"守りの年。"};
+const PUNCH_LEAD_M={"◎":"大きく動いていい月。","○":"動いて大丈夫な月。","△":"準備に回したい月。",
+"▲":"慎重にいきたい月。","×":"守りの月。"};
+const PALACE_TAIL={
+"乾":{"◎":"決めて進めば、必ず形になります","○":"決めたことから、順に片づけて",
+"△":"広げるより、やりかけを仕上げて","▲":"決断は急がず、材料をそろえてから","×":"今は畳むとき。手を広げないこと"},
+"巽":{"◎":"人からの話が、大きな流れを連れてきます","○":"誘われたら顔を出す。それだけで整います",
+"△":"話は受けても、返事はひと呼吸おいて","▲":"うまい話ほど、間を置いて確かめて","×":"誘いには乗らず、少し距離を置いて"},
+"兌":{"◎":"笑って味わうほど、実りが返ってきます","○":"人と過ごす時間に、喜びが増えます",
+"△":"使うより、まず整える。口も財布も控えめに","▲":"軽口が誤解を生みます。言葉は丁寧に","×":"散財と口論に用心。控えめに過ごして"},
+"震":{"◎":"思い切って踏み出せば、勢いに乗れます","○":"小さくていいので、最初の一歩を",
+"△":"始める前に、段取りを固めて","▲":"動きたい気持ちを、いったん抑えて","×":"勢いが空回りします。動かないこと"},
+"離":{"◎":"表に立つほど、大きく返ってきます","○":"見られる場に出ると、話が進みます",
+"△":"表に出す前に、中身を整えて","▲":"目立つ分、粗も見えます。控えめに","×":"表に出ないこと。隠しごとも明るみに出ます"},
+"坤":{"◎":"地道に積んだ分が、そのまま実ります","○":"こつこつ続けたことが、実を結びます",
+"△":"派手さより、足元を固めて","▲":"引き受けすぎず、手の届く範囲で","×":"人の面倒を抱え込みすぎないように"},
+"艮":{"◎":"大きな変わり目。流れに乗れば景色が変わります","○":"変化の波が来るとき。素直に乗って",
+"△":"変わり始めるとき。身構えず様子を見て","▲":"否応なく変わるとき。逆らわず流れを見て",
+"×":"変化に飲まれるとき。抗わず、身を低くして"},
+"坎":{"◎":"静かに深めた分だけ、力になります","○":"表に出さずとも、内側は育っています",
+"△":"見えないところを、丁寧に整えて","▲":"無理に浮上せず、内側を耕して","×":"土の中で春を待つとき。学びと休みに使って"},
+"中宮":{"◎":"散らかったものに、決着がつきます","○":"迷っていたことに、答えが出ます",
+"△":"迷いが出やすいとき。焦って決めないで","▲":"決めきれないとき。答えを急がないこと",
+"×":"動くより、いま抱えているものに決着を"}};
+function punchText(mark,palace,color,isMonth){
+  const lead=(isMonth?PUNCH_LEAD_M:PUNCH_LEAD)[mark]||"";
+  const t=PALACE_TAIL[palace];
+  return lead+((t&&t[mark])?t[mark]:"");
+}
 const SIGNAL={"◎":["青","進め","今年は動いていい年。挑戦や新しいことに向いています","sig-ao","迷わなくていい。今年のあなたは追い風の中にいます"],
 "○":["青","進め","今年は動いていい年。前に進んで大丈夫です","sig-ao","前に進んでいい年。手応えはちゃんと返ってきます"],
 "△":["黄","ひと呼吸","あせらず準備の年。下ごしらえに力を注いで","sig-ki","急いで動くより、仕込みに回したほうがいい年です"],
@@ -1369,9 +1400,8 @@ function divine(){
   const ksatsu=keishaSatsu(y,m,d,isMale,center);
   const steps=(kuubou?1:0)+(anken?1:0),final=downMark(base,steps);
   const sg=SIGNAL[final],color=sg[0],verdict=sg[1],cls=sg[3];
-  let gloss=sg[2],punch=sg[4];
+  let punch=punchText(final,palace,color,false);
   if(steps>0 && final==='▲' && (base==='◎'||base==='○')){
-    gloss='動けなくはない年。ただし、よく考えてから。慎重さが条件です';
     punch='地力はある年。動くなら小さく、じっくり。勢いまかせだけは禁物です';
   }
   let chips='';
@@ -1404,7 +1434,7 @@ function divine(){
   const el=document.getElementById('result');
   el.innerHTML='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
     '<div class="mark">'+final+'</div><div class="verdict">'+verdict+'</div>'+
-    '<div class="punch">'+punch+'</div><div class="gloss">'+gloss+'</div></div>'+
+    '<div class="punch">'+punch+'</div></div>'+
     '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
     '<div class="type-name">「'+t16.name+'」タイプ</div>'+
     '<div class="note">'+t16.body+'</div>'+
@@ -1431,7 +1461,8 @@ function divine(){
   const ksatsu=keishaSatsu(y,m,d,isMale,mcen);
   const base=PALACE_SCORE[palace];
   const mfinal=downMark(base,anken?1:0);
-  const sg=SIGNAL_M[mfinal],color=sg[0],verdict=sg[1],gloss=sg[2],cls=sg[3],punch=sg[4];
+  const sg=SIGNAL_M[mfinal],color=sg[0],verdict=sg[1],cls=sg[3];
+  const punch=punchText(mfinal,palace,color,true);
   const label=(pickedMonth==='last')?'先月':(pickedMonth==='next')?'来月':'今月';
   // まとめ：青なら使い方、黄・赤なら翌月の見通し
   let flowMsg;
@@ -1452,7 +1483,7 @@ function divine(){
   const el=document.getElementById('result');
   el.innerHTML='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
     '<div class="mark">'+mfinal+'</div><div class="verdict">'+verdict+'</div>'+
-    '<div class="punch">'+punch+'</div><div class="gloss">'+gloss+'</div></div>'+
+    '<div class="punch">'+punch+'</div></div>'+
     '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
     '<div class="type-name">「'+t16.name+'」タイプ</div>'+
     '<div class="note">'+t16.body+'</div>'+
