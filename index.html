@@ -3,7 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>三命クロス法</title>
+<script>
+// iPhoneのホーム画面から開いた時も、公開先の最新版へ自動で切り替える
+(function autoUpdate(){
+  // ファイル確認画面などでは動かさず、実際のGitHub Pages上だけで動かす
+  if(location.hostname!=='punnti333.github.io') return;
+
+  function shortHash(text){
+    var h1=2166136261;
+    for(var i=0;i<text.length;i++){
+      h1^=text.charCodeAt(i);
+      h1=Math.imul(h1,16777619);
+    }
+    return (h1>>>0).toString(36)+'-'+text.length.toString(36);
+  }
+
+  function checkLatest(){
+    var checkUrl=new URL(location.href);
+    checkUrl.searchParams.set('__check',Date.now().toString());
+
+    fetch(checkUrl.href,{cache:'no-store',credentials:'same-origin'})
+      .then(function(res){
+        if(!res.ok) throw new Error('update check failed');
+        return res.text();
+      })
+      .then(function(html){
+        var latest=shortHash(html);
+        var shown=new URL(location.href).searchParams.get('__v');
+        if(shown===latest) return;
+
+        var next=new URL(location.href);
+        next.searchParams.delete('__check');
+        next.searchParams.set('__v',latest);
+        location.replace(next.href);
+      })
+      .catch(function(){
+        // 電波がない時は、保存されている画面をそのまま使う
+      });
+  }
+
+  if(document.readyState==='loading'){
+    window.addEventListener('DOMContentLoaded',checkLatest,{once:true});
+  }else{
+    checkLatest();
+  }
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible') checkLatest();
+  });
+})();
+</script>
 <style>@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 :root{--sumi:#14110f;--sumi2:#1d1916;--washi:#ece3d0;--washi2:#ded2b8;
 --shu:#c0392b;--shu2:#9b2418;--kin:#c9a44c;--kin2:#e0c478;--ai:#2a4d6e;--moku:#5b7a4f;}
