@@ -361,6 +361,13 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     <span class="fb-sub">以降は月330円の会員制になります</span>
     <span style="display:inline-block;margin-top:9px;padding:10px 26px;background:#c9a44c;color:#14110f;border-radius:24px;font-weight:700;font-size:15px;letter-spacing:.08em;box-shadow:0 2px 8px rgba(0,0,0,.35)">▶ 会員登録はこちら</span>
   </div>
+  <script>
+  (function(){
+    var end=new Date(2026,7,15,23,59,59);
+    var el=document.getElementById('fb-days');
+    if(el) el.textContent=Math.max(0,Math.ceil((end-new Date())/86400000));
+  })();
+  </script>
   <header>
     <div class="seal">三命<br>占断</div>
     <h1>三<span class="k">命</span>クロス法</h1>
