@@ -8,10 +8,11 @@
 <meta http-equiv="Expires" content="0">
 <title>三命クロス法</title>
 <script>
-// iPhoneのホーム画面から開いた時も、公開先の最新版へ自動で切り替える
+// iPhoneのホーム画面から開いた時も、公開先の最新版を直接読み込む
 (function autoUpdate(){
   // ファイル確認画面などでは動かさず、実際のGitHub Pages上だけで動かす
   if(location.hostname!=='punnti333.github.io') return;
+  var SESSION_KEY='sanmei-cross-loaded-version';
 
   function shortHash(text){
     var h1=2166136261;
@@ -23,23 +24,29 @@
   }
 
   function checkLatest(){
-    var checkUrl=new URL(location.href);
+    // ホーム画面に保存された古いURLではなく、公開中のindex.htmlを必ず確認する
+    var checkUrl=new URL('/sanmei-cross/index.html',location.origin);
     checkUrl.searchParams.set('__check',Date.now().toString());
 
-    fetch(checkUrl.href,{cache:'no-store',credentials:'same-origin'})
+    fetch(checkUrl.href,{
+      cache:'no-store',
+      credentials:'same-origin',
+      headers:{'Cache-Control':'no-cache'}
+    })
       .then(function(res){
         if(!res.ok) throw new Error('update check failed');
         return res.text();
       })
       .then(function(html){
         var latest=shortHash(html);
-        var shown=new URL(location.href).searchParams.get('__v');
-        if(shown===latest) return;
+        if(sessionStorage.getItem(SESSION_KEY)===latest) return;
 
-        var next=new URL(location.href);
-        next.searchParams.delete('__check');
-        next.searchParams.set('__v',latest);
-        location.replace(next.href);
+        // iPhoneのホーム画面ではlocation.reload()が古い画面へ戻ることがあるため、
+        // 取得した最新版そのものを現在の画面へ書き込む
+        sessionStorage.setItem(SESSION_KEY,latest);
+        document.open();
+        document.write(html);
+        document.close();
       })
       .catch(function(){
         // 電波がない時は、保存されている画面をそのまま使う
