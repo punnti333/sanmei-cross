@@ -116,6 +116,9 @@ padding:12px 0;display:inline-block;}
 border-radius:20px;padding:8px 12px 8px 14px;margin:4px 8px 0 0;cursor:pointer;font-size:14px;color:var(--washi);}
 .pchip .pname{font-weight:700;color:var(--kin2);}
 .pchip .pdel{margin-left:8px;opacity:.5;padding:0 4px;}
+.pchip .pto{margin-left:7px;padding:2px 8px;border:1px solid rgba(201,164,76,.5);border-radius:6px;
+color:var(--kin2);font-size:12px;}
+.pchip .pto:active{background:rgba(201,164,76,.25);}
 .again-row{display:flex;gap:10px;margin:24px 0 6px;}
 .again-btn{flex:1;display:block;padding:16px 0;padding:16px 0;text-align:center;cursor:pointer;
 border:1px solid rgba(201,164,76,.5);border-radius:26px;background:rgba(201,164,76,.10);
@@ -446,7 +449,10 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         <div class="sex-mini"><button type="button" id="b-male" class="on" onclick="setSexB(true)">男</button><button type="button" id="b-female" onclick="setSexB(false)">女</button></div></div>
     </div>
     <div id="people-b" class="people-wrap"></div>
-    <button type="button" class="save-btn" onclick="savePerson('by','bm','bd')">＋ お相手に名前をつけて保存</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button type="button" class="save-btn" onclick="savePerson('ay','am','ad')" style="flex:1;min-width:150px;">＋ あなたを保存</button>
+      <button type="button" class="save-btn" onclick="savePerson('by','bm','bd')" style="flex:1;min-width:150px;">＋ お相手を保存</button>
+    </div>
     <button class="divine-btn" onclick="checkAishou()" style="margin-top:14px;">相　性　を　視　る</button>
   </div>
   <div id="aishou-result"></div>
@@ -925,6 +931,23 @@ function shiftMonth(yearAdj,setsuMonth,delta){
 }
 // 節月→表示用の月（節月1=2月…節月11=12月、節月12=1月）
 function setsuToCalMonth(sm){ return sm<=11 ? sm+1 : 1; }
+// 節月の始まり（節入り日）を DATA.setsu から探す
+function setsuStartDate(yearAdj,setsuMonth){
+  const cal=setsuToCalMonth(setsuMonth);
+  const yr=(setsuMonth===12)?yearAdj+1:yearAdj;   // 節月12(丑)は翌年1月
+  const arr=DATA.setsu[yr]||[];
+  for(const t of arr){ if(t[1]===cal) return {y:t[0],m:t[1],d:t[2]}; }
+  return null;
+}
+// 節月の期間を「7/7〜8/6」の形にする
+function setsuRangeLabel(yearAdj,setsuMonth){
+  const a=setsuStartDate(yearAdj,setsuMonth);
+  const nx=shiftMonth(yearAdj,setsuMonth,1);
+  const b=setsuStartDate(nx.yearAdj,nx.setsuMonth);
+  if(!a||!b) return '';
+  const end=new Date(Date.UTC(b.y,b.m-1,b.d)-86400000);  // 次の節入りの前日まで
+  return a.m+'/'+a.d+'〜'+(end.getUTCMonth()+1)+'/'+end.getUTCDate();
+}
 // 基準年と節月から、本命星の月回座を出す
 function monthPalaceByIndex(birthStar, yearAdj, setsuMonth){
   const zhi = DATA.yearZhi[yearAdj] || "子";
@@ -1252,8 +1275,10 @@ function savePerson(iy,im,id){
   if(!validDate(y,m,d)){alert('先に生年月日を入れてください（西暦1930〜2030）。');return;}
   const nm=(prompt('お名前をどうぞ（例：母、たろう、山田さん）','')||'').trim();
   if(!nm)return;
+  // どの欄から保存したかで、性別も一緒に控える
+  const male=(iy==='by')?isMaleB:(iy==='ay')?isMaleA:isMale;
   let list=loadPeople().filter(function(e){return e.name!==nm;});
-  list.unshift({name:nm.slice(0,12),y:y,m:m,d:d});
+  list.unshift({name:nm.slice(0,12),y:y,m:m,d:d,male:male});
   if(list.length>12)list=list.slice(0,12);
   savePeople(list);
 }
@@ -1268,22 +1293,38 @@ function delPerson(i,ev){
 function usePerson(i,who){
   const p=loadPeople()[i];
   if(!p)return;
-  const ids=(who==='b')?['by','bm','bd']:['y','m','d'];
+  const ids=(who==='b')?['by','bm','bd']:(who==='a')?['ay','am','ad']:['y','m','d'];
   document.getElementById(ids[0]).value=p.y;
   document.getElementById(ids[1]).value=p.m;
   document.getElementById(ids[2]).value=p.d;
+  // 保存されていれば性別も戻す（呼び出した先の欄に合わせる）
+  if(typeof p.male==='boolean'){
+    if(who==='b') setSexB(p.male);
+    else if(who==='a') setSexA(p.male);
+    else setSex(p.male);
+  }
 }
 function renderPeople(){
   const list=loadPeople();
   [['people',''],['people-b','b']].forEach(function(pair){
     const el=document.getElementById(pair[0]); if(!el)return;
     if(!list.length){el.innerHTML='';return;}
-    const lab=(pair[1]==='b')?'登録した人（タップでお相手に入ります）':'登録した人（タップで呼び出し）';
+    const isAishou=(pair[1]==='b');
+    const lab=isAishou?'登録した人（「あ」＝あなた／「相」＝お相手に入ります）':'登録した人（タップで呼び出し）';
     let s='<div class="hist-title">'+lab+'</div>';
     list.forEach(function(e,i){
-      s+='<span class="pchip" onclick="usePerson('+i+',\''+pair[1]+'\')">'+
-        '<span class="pname">'+escHTML(e.name)+'</span>　'+e.y+'.'+e.m+'.'+e.d+
-        '<span class="pdel" onclick="delPerson('+i+',event)">×</span></span>';
+      const sexTag=(typeof e.male==='boolean')?'<span style="opacity:.6;margin-left:6px">'+(e.male?'男':'女')+'</span>':'';
+      if(isAishou){
+        s+='<span class="pchip">'+
+          '<span class="pname">'+escHTML(e.name)+'</span>　'+e.y+'.'+e.m+'.'+e.d+sexTag+
+          '<span class="pto" onclick="usePerson('+i+',\'a\')">あ</span>'+
+          '<span class="pto" onclick="usePerson('+i+',\'b\')">相</span>'+
+          '<span class="pdel" onclick="delPerson('+i+',event)">×</span></span>';
+      }else{
+        s+='<span class="pchip" onclick="usePerson('+i+',\'\')">'+
+          '<span class="pname">'+escHTML(e.name)+'</span>　'+e.y+'.'+e.m+'.'+e.d+sexTag+
+          '<span class="pdel" onclick="delPerson('+i+',event)">×</span></span>';
+      }
     });
     el.innerHTML=s;
   });
@@ -1350,9 +1391,9 @@ function initMonthButtons(){
   baseMonth={yearAdj:info.yearAdj, setsuMonth:info.setsuMonth};
   const last=shiftMonth(baseMonth.yearAdj,baseMonth.setsuMonth,-1);
   const next=shiftMonth(baseMonth.yearAdj,baseMonth.setsuMonth,1);
-  document.getElementById('mo-last-num').textContent=setsuToCalMonth(last.setsuMonth)+'月';
-  document.getElementById('mo-now-num').textContent=setsuToCalMonth(baseMonth.setsuMonth)+'月';
-  document.getElementById('mo-next-num').textContent=setsuToCalMonth(next.setsuMonth)+'月';
+  document.getElementById('mo-last-num').textContent=setsuRangeLabel(last.yearAdj,last.setsuMonth)||setsuToCalMonth(last.setsuMonth)+'月';
+  document.getElementById('mo-now-num').textContent=setsuRangeLabel(baseMonth.yearAdj,baseMonth.setsuMonth)||setsuToCalMonth(baseMonth.setsuMonth)+'月';
+  document.getElementById('mo-next-num').textContent=setsuRangeLabel(next.yearAdj,next.setsuMonth)||setsuToCalMonth(next.setsuMonth)+'月';
 }
 function pickMonth(which){
   pickedMonth=which;
@@ -1489,7 +1530,7 @@ function divine(){
     '<div class="note">'+t16.body+'</div>'+
     '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
     (t16.note?'<div class="note" style="opacity:.55;font-size:12.5px;margin-top:6px">※'+t16.note+'</div>':'')+'</div>'+
-    '<div class="detail"><div class="lab">'+label+'（'+cal+'月）のあなたの運気</div>'+
+    '<div class="detail"><div class="lab">'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）のあなたの運気</div>'+
     '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+mfinal+'</span></div>'+
     '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
     '<div class="note">'+(anken?'土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただしこの月は暗剣殺が重なるため、その力を大きく使う月ではありません。信号の判定を目安にしてください。':PALACE_PUNCH[palace])+'</div>'+
@@ -1497,7 +1538,7 @@ function divine(){
     (ksatsu==='goou'?'<span class="chip chip-kokoro">心が五黄殺の月（自分から招く乱れに注意）</span>':'')+
     (ksatsu==='anken'?'<span class="chip chip-kokoro">心が暗剣殺の月（迷い・判断の曇りに注意）</span>':'')+'</div></div>'+
     '<div class="flow">'+flowMsg+'</div>'+
-    shareRowHTML('私は「'+t16.name+'」タイプ。'+label+'（'+cal+'月）は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
+    shareRowHTML('私は「'+t16.name+'」タイプ。'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
   el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
   saveHistory(y,m,d,t16.name);
 }
