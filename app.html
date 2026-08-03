@@ -1436,7 +1436,7 @@ function toHoroscope(){
   let url='https://punnti333.github.io/horoscope/';
   if(validDate(y,m,d)){
     url+='?y='+y+'&m='+m+'&d='+d;
-    if(currentName) url+='&name='+encodeURIComponent(currentName.slice(0,12));
+    if(currentName) url+='&n='+encodeURIComponent(currentName.slice(0,12));  // 受け取り側は n
   }
   window.open(url,'_blank','noopener');
 }
