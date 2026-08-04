@@ -107,14 +107,21 @@ padding:12px 0;display:inline-block;}
 .sb-x{border-color:rgba(255,255,255,.35);}
 .sb-line{border-color:rgba(76,201,96,.5);color:#8fe39b;}
 .hist-wrap{margin-top:14px;}
-.hist-title{font-size:13px;color:var(--kin2);opacity:.8;letter-spacing:.12em;margin-bottom:6px;}
-.hist-chip{display:inline-block;background:#0f0c0a;border:1px solid rgba(201,164,76,.3);border-radius:20px;padding:8px 14px;margin:4px 8px 0 0;cursor:pointer;font-size:14px;color:var(--washi2);}
+.hist-title{font-size:13px;color:var(--kin2);opacity:.8;letter-spacing:.12em;margin-bottom:6px;width:100%;}
+/* チップは文字として流さず、折り返す箱として並べる。
+   inline で流すと、行の高さを超えた分が上の行に重なり、
+   タップ位置が1行ぶんずれる。 */
+.people-wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
+.hist-wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;}
+.hist-chip{display:flex;align-items:center;min-height:44px;background:#0f0c0a;
+border:1px solid rgba(201,164,76,.3);border-radius:22px;padding:0 16px;margin:0;
+cursor:pointer;font-size:14px;color:var(--washi2);-webkit-tap-highlight-color:rgba(201,164,76,.3);}
 .hist-chip:active{transform:scale(.97);}
 .hist-clear{display:inline-block;margin:4px 0 0;padding:8px 6px;font-size:12px;color:var(--washi2);opacity:.5;cursor:pointer;text-decoration:underline;}
 .people-wrap{margin-top:16px;}
-.pchip{display:inline-flex;align-items:center;background:rgba(201,164,76,.10);
+.pchip{display:flex;align-items:center;background:rgba(201,164,76,.10);
 border:1px solid rgba(201,164,76,.45);
-border-radius:24px;padding:4px 6px 4px 14px;margin:8px 10px 0 0;cursor:pointer;font-size:14px;color:var(--washi);}
+border-radius:24px;padding:4px 6px 4px 14px;margin:0;cursor:pointer;font-size:14px;color:var(--washi);}
 .pchip.noclick{cursor:default;}
 .pchip .pname{font-weight:700;color:var(--kin2);}
 /* タップ対象は44px四方を確保する。指の接地面は40〜45pxあり、
@@ -1314,6 +1321,26 @@ function usePerson(i,who){
     else setSex(p.male);
   }
 }
+(function bindChips(){
+  // pointerdown と click は同じ操作で続けて起きる。
+  // 直前と「同じボタン」なら無視し、別のボタンならすぐ通す。
+  let lastEl=null, lastAt=0;
+  function handle(ev){
+    const t=ev.target.closest ? ev.target.closest('[data-del],[data-use]') : null;
+    if(!t) return;
+    const now=Date.now();
+    if(t===lastEl && now-lastAt<700) return;
+    lastEl=t; lastAt=now;
+    if(t.hasAttribute('data-del')){ delPerson(+t.getAttribute('data-del'), ev); return; }
+    ev.preventDefault();
+    // 入力欄からフォーカスを外し、キーボードを先に閉じる
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    usePerson(+t.getAttribute('data-use'), t.getAttribute('data-who')||'');
+  }
+  document.addEventListener('pointerdown',handle,true);
+  document.addEventListener('click',handle,true);   // pointerdown 非対応の端末向け
+})();
+
 function renderPeople(){
   const list=loadPeople();
   [['people',''],['people-b','b']].forEach(function(pair){
@@ -1327,13 +1354,13 @@ function renderPeople(){
       if(isAishou){
         s+='<span class="pchip noclick">'+
           '<span class="pname">'+escHTML(e.name)+'</span>　'+e.y+'.'+e.m+'.'+e.d+sexTag+
-          '<span class="pto" onclick="usePerson('+i+',\'a\')">あ</span>'+
-          '<span class="pto" onclick="usePerson('+i+',\'b\')">相</span>'+
-          '<span class="pdel" onclick="delPerson('+i+',event)">×</span></span>';
+          '<span class="pto" data-use="'+i+'" data-who="a">あ</span>'+
+          '<span class="pto" data-use="'+i+'" data-who="b">相</span>'+
+          '<span class="pdel" data-del="'+i+'">×</span></span>';
       }else{
-        s+='<span class="pchip" onclick="usePerson('+i+',\'\')">'+
+        s+='<span class="pchip" data-use="'+i+'" data-who="">'+
           '<span class="pname">'+escHTML(e.name)+'</span>　'+e.y+'.'+e.m+'.'+e.d+sexTag+
-          '<span class="pdel" onclick="delPerson('+i+',event)">×</span></span>';
+          '<span class="pdel" data-del="'+i+'">×</span></span>';
       }
     });
     el.innerHTML=s;
