@@ -75,6 +75,30 @@ border-radius:10px;color:#fff;font-family:'Shippori Mincho',serif;font-weight:70
 letter-spacing:.4em;text-indent:.4em;box-shadow:0 8px 24px rgba(192,57,43,.35);transition:transform .15s,box-shadow .2s;}
 .divine-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(192,57,43,.5);}
 .divine-btn:active{transform:translateY(0);}
+.dcol.locked{opacity:.9;border-style:dashed;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;}
+.dcol .dlock{font-size:24px;margin:10px 0 6px;opacity:.85;}
+/* ぼかして隠す。色で答えが分かる信号には使わない。 */
+.blurwrap{position:relative;overflow:hidden;border-radius:10px;}
+.blurwrap>.blurred{filter:blur(7px);opacity:.55;pointer-events:none;user-select:none;}
+.blurwrap .blurcap{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;gap:8px;
+  background:linear-gradient(180deg,rgba(15,12,10,.25),rgba(15,12,10,.55));}
+.blurwrap .blurcap .bm{font-size:22px;opacity:.9;}
+.blurwrap .blurcap .bt{font-size:13.5px;color:var(--kin2);letter-spacing:.1em;font-weight:700;}
+.blurwrap .blurcap .bb{font-size:12.5px;cursor:pointer;color:var(--kin2);
+  border:1.5px solid var(--kin);border-radius:9px;padding:8px 16px;background:rgba(201,164,76,.16);}
+.lockbox{margin-top:20px;border:1.5px dashed rgba(201,164,76,.55);border-radius:16px;
+  background:linear-gradient(180deg,rgba(201,164,76,.10),rgba(201,164,76,.03));
+  padding:26px 20px;text-align:center;}
+.lock-mark{font-size:26px;opacity:.85;}
+.lock-ttl{font-size:17px;font-weight:700;color:var(--kin2);letter-spacing:.1em;margin-top:8px;}
+.lock-lead{font-size:13.5px;color:var(--washi2);line-height:1.9;margin-top:8px;}
+.lock-btn{display:inline-block;margin-top:16px;cursor:pointer;font-size:15px;font-weight:700;
+  background:rgba(201,164,76,.16);border:1.5px solid var(--kin);color:var(--kin2);
+  border-radius:12px;padding:14px 26px;letter-spacing:.08em;}
+.lock-btn:active{background:rgba(201,164,76,.32);}
+.lock-sub{font-size:12px;color:var(--washi2);opacity:.75;margin-top:10px;letter-spacing:.06em;}
 #result,#aishou-result{margin-top:28px;display:none;}
 #result.show,#aishou-result.show{display:block;animation:rise .6s ease both;}
 @keyframes rise{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
@@ -1523,21 +1547,27 @@ function divine(){
     else flowMsg='【来年の見通し】'+nty+'年も「'+ntop+'」で赤信号が続きます。あわてず、学びと蓄えにあてる二年と考えてください。';
   }
   const el=document.getElementById('result');
-  el.innerHTML='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
+  const _sig='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
     '<div class="mark">'+final+'</div><div class="verdict">'+verdict+'</div>'+
-    '<div class="punch">'+punch+'</div></div>'+
+    '<div class="punch">'+punch+'</div></div>';
+  el.innerHTML=(canRead()?_sig:'')+
     '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
     '<div class="type-name">「'+t16.name+'」タイプ</div>'+
     '<div class="note">'+t16.body+'</div>'+
     '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
     (t16.note?'<div class="note" style="opacity:.55;font-size:12.5px;margin-top:6px">※'+t16.note+'</div>':'')+'</div>'+
-    '<div class="detail"><div class="lab">'+ty+'年のあなたの運気</div>'+
-    '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span></div>'+
-    '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
-    '<div class="note">'+pp+'</div>'+chips+'</div></div>'+
-    westernYearHTML(y,m,d,ty)+
-    '<div class="flow">'+flowMsg+'</div>'+
-    shareRowHTML('私は「'+t16.name+'」タイプ。'+ty+'年は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
+    (function(){
+      const _in='<div class="lab">'+ty+'年のあなたの運気</div>'+
+        '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span></div>'+
+        '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
+        '<div class="note">'+pp+'</div>'+chips;
+      return '<div class="detail">'+(canRead()?_in:blurHTML(_in,'この年の運気'))+'</div>';
+    })()+'</div>'+
+    (canRead()
+      ? westernYearHTML(y,m,d,ty)+'<div class="flow">'+flowMsg+'</div>'+
+        shareRowHTML('私は「'+t16.name+'」タイプ。'+ty+'年は'+color+'信号「'+verdict+'」でした！ #三命クロス法')
+      : lockHTML(ty+'年の信号',
+          '進んでいい年か、こらえる年か。<br>信号の色と、その年の運気をお伝えします。'));
   el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
   saveHistory(y,m,d,t16.name);
 }function divineMonth(y,m,d){
@@ -1572,23 +1602,30 @@ function divine(){
     else flowMsg='【翌月の見通し】翌月（'+ncal+'月）も「'+ntop+'」で赤信号が続きます。この間は整理と充電にあてるのが吉です。';
   }
   const el=document.getElementById('result');
-  el.innerHTML='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
+  const _sig='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
     '<div class="mark">'+mfinal+'</div><div class="verdict">'+verdict+'</div>'+
-    '<div class="punch">'+punch+'</div></div>'+
+    '<div class="punch">'+punch+'</div></div>';
+  el.innerHTML=(canRead()?_sig:'')+
     '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
     '<div class="type-name">「'+t16.name+'」タイプ</div>'+
     '<div class="note">'+t16.body+'</div>'+
     '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
     (t16.note?'<div class="note" style="opacity:.55;font-size:12.5px;margin-top:6px">※'+t16.note+'</div>':'')+'</div>'+
-    '<div class="detail"><div class="lab">'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）のあなたの運気</div>'+
-    '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+mfinal+'</span></div>'+
-    '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
-    '<div class="note">'+(anken?'土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただしこの月は暗剣殺が重なるため、その力を大きく使う月ではありません。信号の判定を目安にしてください。':PALACE_PUNCH[palace])+'</div>'+
-    (anken?'<span class="chip chip-kuubou">暗剣殺の月（思わぬ横やり・アクシデントに注意）</span> ':'')+
-    (ksatsu==='goou'?'<span class="chip chip-kokoro">心が五黄殺の月（自分から招く乱れに注意）</span>':'')+
-    (ksatsu==='anken'?'<span class="chip chip-kokoro">心が暗剣殺の月（迷い・判断の曇りに注意）</span>':'')+'</div></div>'+
-    '<div class="flow">'+flowMsg+'</div>'+
-    shareRowHTML('私は「'+t16.name+'」タイプ。'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）は'+color+'信号「'+verdict+'」でした！ #三命クロス法');
+    (function(){
+      const _in='<div class="lab">'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）のあなたの運気</div>'+
+        '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+mfinal+'</span></div>'+
+        '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
+        '<div class="note">'+(anken?'土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただしこの月は暗剣殺が重なるため、その力を大きく使う月ではありません。信号の判定を目安にしてください。':PALACE_PUNCH[palace])+'</div>'+
+        (anken?'<span class="chip chip-kuubou">暗剣殺の月（思わぬ横やり・アクシデントに注意）</span> ':'')+
+        (ksatsu==='goou'?'<span class="chip chip-kokoro">心が五黄殺の月（自分から招く乱れに注意）</span>':'')+
+        (ksatsu==='anken'?'<span class="chip chip-kokoro">心が暗剣殺の月（迷い・判断の曇りに注意）</span>':'');
+      return '<div class="detail">'+(canRead()?_in:blurHTML(_in,'この月の運気'))+'</div>';
+    })()+'</div>'+
+    (canRead()
+      ? '<div class="flow">'+flowMsg+'</div>'+
+        shareRowHTML('私は「'+t16.name+'」タイプ。'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）は'+color+'信号「'+verdict+'」でした！ #三命クロス法')
+      : lockHTML(label+'の信号',
+          '動いていい月か、待つべき月か。<br>信号の色と、その月の運気をお伝えします。'));
   el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
   saveHistory(y,m,d,t16.name);
 }
@@ -1680,14 +1717,20 @@ function checkAishou(){
       '<div class="cross-card"><div class="axis"><span class="sym">☀</span>表の顔の相性<span class="axis-sub">ふだんの付き合いやすさ</span></div>'+
         '<div class="pairing">'+A.info[0]+'（'+A.sunGogyo+'）　×　'+B.info[0]+'（'+B.sunGogyo+'）</div>'+
         '<div class="rel '+sun[1]+'">'+relMark(sun[0])+'</div><div class="relnote">'+sun[2]+'。</div></div>'+
-      '<div class="cross-card"><div class="axis"><span class="sym">☾</span>心の奥の相性<span class="axis-sub">気持ちの通じ方</span></div>'+
-        '<div class="pairing">'+A.moonGogyo+'　×　'+B.moonGogyo+'</div>'+
-        '<div class="rel '+moon[1]+'">'+relMark(moon[0])+'</div><div class="relnote">'+moon[2]+'。</div></div>'+
+      (function(){
+        const _in='<div class="pairing">'+A.moonGogyo+'　×　'+B.moonGogyo+'</div>'+
+          '<div class="rel '+moon[1]+'">'+relMark(moon[0])+'</div><div class="relnote">'+moon[2]+'。</div>';
+        return '<div class="cross-card"><div class="axis"><span class="sym">☾</span>心の奥の相性<span class="axis-sub">気持ちの通じ方</span></div>'+
+          (canRead()?_in:blurHTML(_in,'心の奥の相性'))+'</div>';
+      })()+
     '</div>'+
     '<div class="persons-line">'+stemCardHTML('あなた',A)+stemCardHTML('お相手',B)+'</div>'+
     stemLineHTML(A,B)+
-    '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">二人の縁は ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+gapNote+'</div>'+
-    shareRowHTML('私たちの相性は'+starStr+'「'+verdict+'」でした！ #三命クロス法');
+    (canRead()
+      ? '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">二人の縁は ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+gapNote+'</div>'+
+        shareRowHTML('私たちの相性は'+starStr+'「'+verdict+'」でした！ #三命クロス法')
+      : lockHTML('二人の縁',
+          '表の顔と心の奥、その二つを合わせた総合の判定を<br>星の数と一言でお伝えします。'));
   const el=document.getElementById('aishou-result');
   el.innerHTML=html; el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -1901,9 +1944,20 @@ function divineDaily(){
   const now=new Date();
   const labs=['昨日','今日','明日'];
   let cards='';
+  // 会員でないときは明日だけ見せる。信号は色そのものが答えなので、
+  // 文字を伏せるのではなく、カードごと差し替える。
+  const _read=canRead();
   for(let i=-1;i<=1;i++){
     const t=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i);
     const r=dailyOne(t,myStar,kuuPair,userE);
+    if(!_read && i<1){
+      cards+='<div class="dcol locked">'+
+        '<div class="dlab">'+labs[i+1]+'</div><div class="ddate">'+r.m+'月'+r.d+'日</div>'+
+        '<div class="dlock">&#128274;</div>'+
+        '<div class="dtxt" style="opacity:.75">会員の方は<br>こちらをご覧になれます</div>'+
+        '</div>';
+      continue;
+    }
     cards+='<div class="dcol'+(i===0?' today':'')+' '+r.cls+'">'+
       '<div class="dlab">'+labs[i+1]+'</div><div class="ddate">'+r.m+'月'+r.d+'日</div>'+
       '<div class="dsig">'+r.color+'信号</div><div class="dmark">'+r.mark+'</div>'+
@@ -1914,7 +1968,10 @@ function divineDaily(){
   }
   const el=document.getElementById('daily-result');
   el.innerHTML='<div class="daily-grid">'+cards+'</div>'+
-    shareRowHTML('今日の運勢は「'+dailyOne(new Date(now.getFullYear(),now.getMonth(),now.getDate()),myStar,kuuPair,userE).color+'信号」でした！ #三命クロス法');
+    (_read
+      ? shareRowHTML('今日の運勢は「'+dailyOne(new Date(now.getFullYear(),now.getMonth(),now.getDate()),myStar,kuuPair,userE).color+'信号」でした！ #三命クロス法')
+      : lockHTML('昨日と今日の運勢',
+          '肝心なのは、今日どう過ごすか。<br>昨日からの流れとあわせてお伝えします。'));
   showAgain('daily-result');
   el.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -1946,6 +2003,26 @@ const FREE_END = new Date(2026, 7, 15, 23, 59, 59); // 2026年8月15日まで無
 const UNLOCK_MARK = '開門'; // 記事の有料部分に入れた合図の文字
 function isFreePeriod(){ return new Date() <= FREE_END; }
 function openGate(){ document.getElementById('member-gate').classList.add('on'); }
+// 会員として読めるか
+function canRead(){ return isFreePeriod() || window.__unlocked; }
+// 続きを隠すときの差し込み。信号は色そのものが答えになるため、
+// ぼかしではなくブロックごと入れ替える。
+// 中身は出したうえでぼかす。枠が空になるより「隠れている」と伝わる。
+function blurHTML(inner, label){
+  return '<div class="blurwrap"><div class="blurred">'+inner+'</div>'
+    + '<div class="blurcap"><div class="bm">&#128274;</div>'
+    + '<div class="bt">'+label+'</div>'
+    + '<div class="bb" onclick="openGate()">会員登録・ログインして見る</div></div></div>';
+}
+function lockHTML(label, lead){
+  return '<div class="lockbox">'
+    + '<div class="lock-mark">&#128274;</div>'
+    + '<div class="lock-ttl">'+label+'</div>'
+    + (lead?'<div class="lock-lead">'+lead+'</div>':'')
+    + '<div class="lock-btn" onclick="openGate()">会員登録・ログインして見る</div>'
+    + '<div class="lock-sub">月330円で、四つの占いすべてが使えます</div>'
+    + '</div>';
+}
 function closeGate(){
   // 無料期間中、または解錠済みのときだけ閉じられる
   if(isFreePeriod() || window.__unlocked) document.getElementById('member-gate').classList.remove('on');
@@ -1960,11 +2037,9 @@ function closeGate(){
       banner.style.display='block';
       document.getElementById('gate-msg').innerHTML='会員のご案内<br>（8月15日までは全機能を無料でお使いいただけます）';
     }else{
-      // 無料期間終了後：関所を立てる
+      // 無料期間終了後：入口は開けておき、結果の途中で止める
       banner.style.display='none';
-      document.getElementById('gate-back').style.display='none';
       document.getElementById('gate-msg').innerHTML='ここから先は会員の方の占い処です<br>ご購読またはログインをお願いします';
-      openGate();
     }
     // 解錠の見張り：codocが有料部分（合図の文字）を描画したら開門
     const entry=document.getElementById('codoc-entry-jRBN6Pyw9w');
