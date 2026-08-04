@@ -112,13 +112,21 @@ padding:12px 0;display:inline-block;}
 .hist-chip:active{transform:scale(.97);}
 .hist-clear{display:inline-block;margin:4px 0 0;padding:8px 6px;font-size:12px;color:var(--washi2);opacity:.5;cursor:pointer;text-decoration:underline;}
 .people-wrap{margin-top:16px;}
-.pchip{display:inline-block;background:rgba(201,164,76,.10);border:1px solid rgba(201,164,76,.45);
-border-radius:20px;padding:8px 12px 8px 14px;margin:4px 8px 0 0;cursor:pointer;font-size:14px;color:var(--washi);}
+.pchip{display:inline-flex;align-items:center;background:rgba(201,164,76,.10);
+border:1px solid rgba(201,164,76,.45);
+border-radius:24px;padding:4px 6px 4px 14px;margin:8px 10px 0 0;cursor:pointer;font-size:14px;color:var(--washi);}
+.pchip.noclick{cursor:default;}
 .pchip .pname{font-weight:700;color:var(--kin2);}
-.pchip .pdel{margin-left:8px;opacity:.5;padding:0 4px;}
-.pchip .pto{margin-left:7px;padding:2px 8px;border:1px solid rgba(201,164,76,.5);border-radius:6px;
-color:var(--kin2);font-size:12px;}
-.pchip .pto:active{background:rgba(201,164,76,.25);}
+/* タップ対象は44px四方を確保する。指の接地面は40〜45pxあり、
+   これより小さいと隣のボタンを巻き込む。 */
+.pchip .pto,.pchip .pdel{display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;height:44px;margin-left:6px;cursor:pointer;
+  -webkit-tap-highlight-color:rgba(201,164,76,.3);}
+.pchip .pto{border:1px solid rgba(201,164,76,.5);border-radius:10px;
+  color:var(--kin2);font-size:15px;font-weight:700;background:rgba(201,164,76,.08);}
+.pchip .pto:active{background:rgba(201,164,76,.35);}
+.pchip .pdel{opacity:.55;font-size:17px;border-radius:10px;margin-left:10px;}
+.pchip .pdel:active{background:rgba(255,255,255,.12);opacity:1;}
 .again-row{display:flex;gap:10px;margin:24px 0 6px;}
 .again-btn{flex:1;display:block;padding:16px 0;padding:16px 0;text-align:center;cursor:pointer;
 border:1px solid rgba(201,164,76,.5);border-radius:26px;background:rgba(201,164,76,.10);
@@ -1317,7 +1325,7 @@ function renderPeople(){
     list.forEach(function(e,i){
       const sexTag=(typeof e.male==='boolean')?'<span style="opacity:.6;margin-left:6px">'+(e.male?'男':'女')+'</span>':'';
       if(isAishou){
-        s+='<span class="pchip">'+
+        s+='<span class="pchip noclick">'+
           '<span class="pname">'+escHTML(e.name)+'</span>　'+e.y+'.'+e.m+'.'+e.d+sexTag+
           '<span class="pto" onclick="usePerson('+i+',\'a\')">あ</span>'+
           '<span class="pto" onclick="usePerson('+i+',\'b\')">相</span>'+
