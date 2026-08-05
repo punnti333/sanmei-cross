@@ -431,14 +431,14 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       <button type="button" class="save-btn" onclick="savePerson('y','m','d')">＋ この生年月日に名前をつけて保存</button>
       <div class="fields" style="margin-top:22px;">
         <div class="field" style="flex:1 1 100%;">
-          <label style="opacity:.7;">生まれた時間（分かれば・空欄でもOK）</label>
+          <label style="opacity:.7;">生まれた時間（空欄でもOK）</label>
           <div style="display:flex;align-items:center;gap:8px;">
             <input type="number" id="bh" min="0" max="23" placeholder="時" style="flex:1;">
             <span style="color:var(--washi2);opacity:.7;font-size:14px;">時</span>
             <input type="number" id="bmi" min="0" max="59" placeholder="分" style="flex:1;">
             <span style="color:var(--washi2);opacity:.7;font-size:14px;">分</span>
           </div>
-          <div style="font-size:12px;color:var(--washi2);opacity:.7;margin-top:6px;line-height:1.6;">入れると持ち味の月星座がより正確になり、ホロスコープにもそのまま引き継がれます。</div>
+          <div style="font-size:12px;color:var(--washi2);opacity:.7;margin-top:6px;line-height:1.6;">入れると月星座がより正確になります。</div>
         </div>
       </div>
       <button class="divine-btn horo-btn" onclick="toHoroscope()" style="margin-top:12px;background:linear-gradient(180deg,#3a3168,#2c2656);color:var(--kin2);">入力した生年月日でホロスコープを見る</button>
