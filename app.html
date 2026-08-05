@@ -429,6 +429,18 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         <input type="hidden" id="tmode" value="year"></div>
       <button class="divine-btn" onclick="divine()">占　う</button>
       <button type="button" class="save-btn" onclick="savePerson('y','m','d')">＋ この生年月日に名前をつけて保存</button>
+      <div class="fields" style="margin-top:22px;">
+        <div class="field" style="flex:1 1 100%;">
+          <label style="opacity:.7;">生まれた時間（分かれば・空欄でもOK）</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="bh" min="0" max="23" placeholder="時" style="flex:1;">
+            <span style="color:var(--washi2);opacity:.7;font-size:14px;">時</span>
+            <input type="number" id="bmi" min="0" max="59" placeholder="分" style="flex:1;">
+            <span style="color:var(--washi2);opacity:.7;font-size:14px;">分</span>
+          </div>
+          <div style="font-size:12px;color:var(--washi2);opacity:.7;margin-top:6px;line-height:1.6;">入れると持ち味の月星座がより正確になり、ホロスコープにもそのまま引き継がれます。</div>
+        </div>
+      </div>
       <button class="divine-btn horo-btn" onclick="toHoroscope()" style="margin-top:12px;background:linear-gradient(180deg,#3a3168,#2c2656);color:var(--kin2);">入力した生年月日でホロスコープを見る</button>
     </div>
   </div>
@@ -1214,9 +1226,13 @@ function moonSignApprox(y,m,d){
   return SIGNS12[Math.floor(lon/30)];
 }
 // 月星座。月は1日で半星座ぶん動くので、その日のうちに星座が変わる場合は alt に控えを返す
-function moonSignInfo(y,m,d){
+// 生まれた時間（JST・小数時）が分かっていれば h に渡す。無ければ正午で計算する。
+function moonSignInfo(y,m,d,h){
+  const known=(typeof h==='number'&&isFinite(h));
+  const hh=known?h:12;
   try{
-    const sign=SIGNS12[Math.floor(eclipLon("Moon",new Date(Date.UTC(y,m-1,d,3)))/30)];
+    const sign=SIGNS12[Math.floor(eclipLon("Moon",new Date(Date.UTC(y,m-1,d,0,0,0)+ (hh-9)*3600000))/30)];
+    if(known) return {sign:sign, alt:null};
     const s0=SIGNS12[Math.floor(eclipLon("Moon",new Date(Date.UTC(y,m-1,d,-9)))/30)];
     const s1=SIGNS12[Math.floor(eclipLon("Moon",new Date(Date.UTC(y,m-1,d+1,-9)))/30)];
     const alt=(s0!==s1)?(sign===s0?s1:s0):null;
@@ -1243,9 +1259,17 @@ const TYPE16={
 "水地":["動かない湖","物静かで感受性ゆたか。心の奥はどっしり安定していて、簡単には揺れません。静かな水面の下に、確かな強さがある人です。"],
 "水風":["つかめない霧","優しくて感じがいいのに、どこか本心が見えない。実は心の中で自由に飛び回っています。そのつかめなさが、人を惹きつけます。"],
 "水水":["海そのもの","感受性のかたまり。人の気持ちが流れ込んでくるほど共感力が高い人です。優しさは海の深さ。ただし人の感情に飲まれないよう、線引きも大切に。"]};
-function getType16(y,m,d){
+// 入力欄の「生まれた時間」を小数時で返す。未入力なら null。
+function birthHour(){
+  const hEl=document.getElementById('bh'), miEl=document.getElementById('bmi');
+  if(!hEl||hEl.value==='') return null;
+  const h=+hEl.value; if(!(h>=0&&h<=23)) return null;
+  const mi=(miEl&&miEl.value!=='')?+miEl.value:0;
+  return h+((mi>=0&&mi<=59)?mi:0)/60;
+}
+function getType16(y,m,d,h){
   const s=sunSign(y,m,d);
-  const mi=moonSignInfo(y,m,d);
+  const mi=moonSignInfo(y,m,d,h);
   const mo=mi.sign;
   const se=SIGN_ELEM[s],me=SIGN_ELEM[mo];
   const t=TYPE16[se+me];
@@ -1253,7 +1277,7 @@ function getType16(y,m,d){
   if(mi.alt){
     const alt=TYPE16[se+SIGN_ELEM[mi.alt]];
     if(alt&&alt[0]!==t[0]){
-      note='この日は心の奥（月）が'+mo+'と'+mi.alt+'の境目にあたります。'+
+      note='このタイプ分けは正午生まれで判定しています。'+
            '生まれた時間によっては「'+alt[0]+'」タイプになります。';
     }
   }
@@ -1494,7 +1518,15 @@ function toHoroscope(){
   let url='https://punnti333.github.io/horoscope/';
   if(validDate(y,m,d)){
     url+='?y='+y+'&m='+m+'&d='+d;
-    if(currentName) url+='&n='+encodeURIComponent(currentName.slice(0,12));  // 受け取り側は n
+    const hEl=document.getElementById('bh'), miEl=document.getElementById('bmi');
+    if(hEl&&hEl.value!==''){
+      const hh=+hEl.value;
+      if(hh>=0&&hh<=23){
+        const mm2=(miEl&&miEl.value!=='')?+miEl.value:0;
+        url+='&h='+hh+'&mi='+((mm2>=0&&mm2<=59)?mm2:0);
+      }
+    }
+    if(currentName) url+='&name='+encodeURIComponent(currentName.slice(0,12));  // 受け取り側は name
   }
   window.open(url,'_blank','noopener');
 }
@@ -1506,7 +1538,7 @@ function divine(){
   if(mode==='month'){ divineMonth(y,m,d); return; }
   if(ty<1930||ty>2030){alert('占う年を正しく入力してください。');return;}
   const star=honmeiStar(y,m,d)[0];
-  const t16=getType16(y,m,d);
+  const t16=getType16(y,m,d,birthHour());
   const center=yearCenter(ty),palace=palaceOf(center,star),base=PALACE_SCORE[palace];
   const ch=isChange(y,m,d,isMale,ty),change=ch[0],startAge=ch[1];
   const kuubou=isKuubouYear(y,m,d,ty);
@@ -1555,7 +1587,7 @@ function divine(){
     '<div class="type-name">「'+t16.name+'」タイプ</div>'+
     '<div class="note">'+t16.body+'</div>'+
     '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
-    (t16.note?'<div class="note" style="opacity:.55;font-size:12.5px;margin-top:6px">※'+t16.note+'</div>':'')+'</div>'+
+    (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'+
     (function(){
       const _in='<div class="lab">'+ty+'年のあなたの運気</div>'+
         '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span></div>'+
@@ -1572,7 +1604,7 @@ function divine(){
   saveHistory(y,m,d,t16.name);
 }function divineMonth(y,m,d){
   const star=honmeiStar(y,m,d)[0];
-  const t16=getType16(y,m,d);
+  const t16=getType16(y,m,d,birthHour());
   const tgt=shiftMonth(baseMonth.yearAdj,baseMonth.setsuMonth,(pickedMonth==='last')?-1:(pickedMonth==='next')?1:0);
   const cal=setsuToCalMonth(tgt.setsuMonth);
   const palace=monthPalaceByIndex(star,tgt.yearAdj,tgt.setsuMonth);
@@ -1610,7 +1642,7 @@ function divine(){
     '<div class="type-name">「'+t16.name+'」タイプ</div>'+
     '<div class="note">'+t16.body+'</div>'+
     '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
-    (t16.note?'<div class="note" style="opacity:.55;font-size:12.5px;margin-top:6px">※'+t16.note+'</div>':'')+'</div>'+
+    (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'+
     (function(){
       const _in='<div class="lab">'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）のあなたの運気</div>'+
         '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+mfinal+'</span></div>'+
