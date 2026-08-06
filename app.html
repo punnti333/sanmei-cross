@@ -366,12 +366,12 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       <div class="mt">今日の<span class="k">運勢</span></div>
       <div class="md">昨日・今日・明日。三日分の運気を信号でお伝えします。毎日開くだけで、その日の過ごし方が分かります。</div><div class="cta">▶　占ってみる</div>
     </div>
-    <div class="navcard" onclick="go('aishou')">
+    <div class="navcard" onclick="goAishou()">
       <div class="mn">相性診断</div>
       <div class="mt">あの人との<span class="k">相性</span></div>
       <div class="md">二人の生まれた日から、表の顔（付き合いやすさ）と心の奥（気持ちの通じ方）の二つで相性を読みます。縁の質がどんなものか、見えてきます。</div><div class="cta">▶　占ってみる</div>
     </div>
-    <a class="navcard" href="https://punnti333.github.io/horoscope/" target="_blank" rel="noopener" style="text-decoration:none;">
+    <a class="navcard" href="https://punnti333.github.io/horoscope/" target="_blank" rel="noopener" onclick="return toHoroscopeLink(this);" style="text-decoration:none;">
       <div class="mn">ホロスコープ</div>
       <div class="mt">あなたの<span class="k">本質</span></div>
       <div class="md">西洋占星術であなたの本質を読み解きます。性格のクセ、基本のエネルギー、そして今めぐる星の流れまで。三命クロス法の「本質」を担うパートです。</div><div class="cta">▶　占ってみる</div>
@@ -1259,6 +1259,29 @@ const TYPE16={
 "水地":["動かない湖","物静かで感受性ゆたか。心の奥はどっしり安定していて、簡単には揺れません。静かな水面の下に、確かな強さがある人です。"],
 "水風":["つかめない霧","優しくて感じがいいのに、どこか本心が見えない。実は心の中で自由に飛び回っています。そのつかめなさが、人を惹きつけます。"],
 "水水":["海そのもの","感受性のかたまり。人の気持ちが流れ込んでくるほど共感力が高い人です。優しさは海の深さ。ただし人の感情に飲まれないよう、線引きも大切に。"]};
+// 入力欄の「生まれた時間」を {h, mi} で返す。未入力なら null。
+function formBirthTime(){
+  const hEl=document.getElementById('bh'), miEl=document.getElementById('bmi');
+  if(!hEl||hEl.value==='') return null;
+  const h=+hEl.value; if(!(h>=0&&h<=23)) return null;
+  const mi=(miEl&&miEl.value!=='')?+miEl.value:0;
+  return {h:h, mi:(mi>=0&&mi<=59)?mi:0};
+}
+// プロフィールを保存する。生まれた時間は、それを入力した生年月日と
+// 一致するときだけ一緒に保存する（別人の日付に時間が残らないように）。
+function saveProfile(y,m,d,male){
+  try{
+    const obj={y:y,m:m,d:d,male:male};
+    const fy=+document.getElementById('y').value,
+          fm=+document.getElementById('m').value,
+          fd=+document.getElementById('d').value;
+    if(fy===y&&fm===m&&fd===d){
+      const t=formBirthTime();
+      if(t){ obj.h=t.h; obj.mi=t.mi; }
+    }
+    localStorage.setItem('sanmei_profile',JSON.stringify(obj));
+  }catch(e){}
+}
 // 入力欄の「生まれた時間」を小数時で返す。未入力なら null。
 function birthHour(){
   const hEl=document.getElementById('bh'), miEl=document.getElementById('bmi');
@@ -1309,7 +1332,7 @@ function saveHistory(y,m,d,type){
     if(h.length>5)h=h.slice(0,5);
     localStorage.setItem('sanmei_history',JSON.stringify(h));
     // 最後に占った生年月日と性別を「自分のプロフィール」として保存（次回から自動入力）
-    localStorage.setItem('sanmei_profile',JSON.stringify({y:y,m:m,d:d,male:isMale}));
+    saveProfile(y,m,d,isMale);
   }catch(e){}
   renderHistory();
 }
@@ -1514,19 +1537,20 @@ function setCurrentName(nm){ currentName=(nm||'').trim(); }
   });
 })();
 function toHoroscope(){
-  const y=+document.getElementById('y').value,m=+document.getElementById('m').value,d=+document.getElementById('d').value;
+  let y=+document.getElementById('y').value,m=+document.getElementById('m').value,d=+document.getElementById('d').value;
+  // 運勢占断の欄が空なら、直前に占った生年月日を使う
+  let fromForm=validDate(y,m,d), time=null;
+  if(fromForm){
+    time=formBirthTime();
+  }else{
+    const p=latestProfile();
+    if(p){ y=p.y; m=p.m; d=p.d; if(typeof p.h==='number') time={h:p.h,mi:p.mi||0}; }
+  }
   let url='https://punnti333.github.io/horoscope/';
   if(validDate(y,m,d)){
     url+='?y='+y+'&m='+m+'&d='+d;
-    const hEl=document.getElementById('bh'), miEl=document.getElementById('bmi');
-    if(hEl&&hEl.value!==''){
-      const hh=+hEl.value;
-      if(hh>=0&&hh<=23){
-        const mm2=(miEl&&miEl.value!=='')?+miEl.value:0;
-        url+='&h='+hh+'&mi='+((mm2>=0&&mm2<=59)?mm2:0);
-      }
-    }
-    if(currentName) url+='&name='+encodeURIComponent(currentName.slice(0,12));  // 受け取り側は name
+    if(time) url+='&h='+time.h+'&mi='+time.mi;
+    if(fromForm&&currentName) url+='&name='+encodeURIComponent(currentName.slice(0,12));  // 受け取り側は name
   }
   window.open(url,'_blank','noopener');
 }
@@ -1768,6 +1792,72 @@ function checkAishou(){
 }
 const ay_=document.getElementById('ay'),am_=document.getElementById('am'),ad_=document.getElementById('ad'),
       by_=document.getElementById('by'),bm_=document.getElementById('bm'),bd_=document.getElementById('bd');
+
+// ===== 相性画面へ：直前に占った生年月日を「あなた」欄に引き継ぐ =====
+// 「あなた」欄が自動入力のままか（手で書き換えられたら false）
+let ayIsAuto=true;
+[ay_,am_,ad_].forEach(function(el){ if(el) el.addEventListener('input',function(){ ayIsAuto=false; }); });
+
+// いま分かっている自分の生年月日を拾う（保存 → 今日の運勢 → 運勢占断 の順）
+function latestProfile(){
+  try{
+    const p=JSON.parse(localStorage.getItem('sanmei_profile')||'null');
+    if(p&&validDate(+p.y,+p.m,+p.d)){
+      const r={y:+p.y,m:+p.m,d:+p.d,male:p.male};
+      if(typeof p.h==='number'&&p.h>=0&&p.h<=23){ r.h=p.h; r.mi=(typeof p.mi==='number'&&p.mi>=0&&p.mi<=59)?p.mi:0; }
+      return r;
+    }
+  }catch(e){}
+  const pick=function(a,b,c){
+    const ey=document.getElementById(a),em=document.getElementById(b),ed=document.getElementById(c);
+    if(!ey||!em||!ed) return null;
+    const y=+ey.value,m=+em.value,d=+ed.value;
+    return validDate(y,m,d)?{y:y,m:m,d:d}:null;
+  };
+  return pick('dy','dm','dd')||pick('y','m','d')||null;
+}
+
+function goAishou(){
+  go('aishou');
+  try{
+    const p=latestProfile();
+    if(!p||!ay_||!am_||!ad_) return;
+    // 空のとき、または自動で入れた値のままのときだけ上書きする
+    if(!ay_.value||ayIsAuto){
+      ay_.value=p.y; am_.value=p.m; ad_.value=p.d;
+      ayIsAuto=true;
+      if(typeof p.male==='boolean') setSexA(p.male);
+    }
+  }catch(e){}
+}
+
+// トップの「ホロスコープ」カード：踏む直前に、分かっている生年月日をURLへ足す
+function toHoroscopeLink(a){
+  try{
+    const p=latestProfile();
+    let url='https://punnti333.github.io/horoscope/';
+    if(p){
+      url+='?y='+p.y+'&m='+p.m+'&d='+p.d;
+      if(typeof p.h==='number') url+='&h='+p.h+'&mi='+(p.mi||0);
+    }
+    a.href=url;
+  }catch(e){}
+  return true; // リンクは通常どおり別タブで開く
+}
+// 生まれた時間を入れ直したら、占うボタンを押さなくてもその場で保存する
+(function watchBirthTime(){
+  ['bh','bmi'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('change',function(){
+      const y=+document.getElementById('y').value,
+            m=+document.getElementById('m').value,
+            d=+document.getElementById('d').value;
+      if(validDate(y,m,d)) saveProfile(y,m,d,isMale);
+    });
+  });
+})();
+
 try{ initYearButtons(); initMonthButtons(); }catch(e){}
 try{ renderHistory(); }catch(e){}
 try{ renderPeople(); }catch(e){}
@@ -1967,7 +2057,7 @@ function divineDaily(){
   if(!validDate(y,m,d)){alert('生まれた日を正しく入力してください（西暦1930〜2030）。');return;}
   try{
     const p=JSON.parse(localStorage.getItem('sanmei_profile')||'{}')||{};
-    localStorage.setItem('sanmei_profile',JSON.stringify({y:y,m:m,d:d,male:(typeof p.male==='boolean')?p.male:isMale}));
+    saveProfile(y,m,d,(typeof p.male==='boolean')?p.male:isMale);
   }catch(e){}
   const myStar=honmeiStar(y,m,d)[0];
   const kuuPair=dayKuubou(y,m,d);
