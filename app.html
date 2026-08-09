@@ -223,8 +223,7 @@ color:var(--washi2);opacity:.78;font-weight:500;}
 .cross-card .pairing{font-family:'Shippori Mincho',serif;font-size:18px;color:var(--washi);margin:10px 0 4px;letter-spacing:.05em;}
 .cross-card .rel{font-family:'Shippori Mincho',serif;font-weight:800;font-size:34px;margin:10px 0;}
 .rel-sei{color:#9ed687;}.rel-hiwa{color:var(--kin2);}.rel-koku{color:#f0857a;}
-.cross-card .relnote{font-family:'Shippori Mincho',serif;font-weight:700;
-font-size:clamp(17px,3.8vw,19px);color:var(--washi);opacity:1;line-height:1.7;letter-spacing:.03em;}
+.cross-card .relnote{font-size:15.5px;color:var(--washi2);opacity:.85;line-height:1.6;}
 .persons-line{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;}
 @media(max-width:560px){.persons-line{grid-template-columns:1fr;}}
 .pcard{background:linear-gradient(160deg,#191512,#0f0c0a);border:1px solid rgba(201,164,76,.18);border-radius:10px;padding:16px 18px;}
@@ -474,7 +473,12 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     </div>
   </div>
   <div id="daily-result"></div>
-  <div class="again-row" id="again-daily-result" style="display:none;"><button type="button" class="again-btn" onclick="againTo('dy')">▲　別の人で占う</button><button type="button" class="again-btn ab-top" onclick="go('top')">◀　最初の画面へ</button></div>
+  <div class="again-row" id="again-daily-result" style="display:none;flex-direction:column;">
+    <a class="again-btn" href="https://punnti333.github.io/horoscope/?go=today" target="_blank" rel="noopener" onclick="return toTodayHoroscope(this);" style="text-decoration:none;">今日の星占いも見る（西洋占星術へ）</a>
+    <div style="display:flex;gap:10px;">
+      <button type="button" class="again-btn" onclick="againTo('dy')">▲　別の人で占う</button><button type="button" class="again-btn ab-top" onclick="go('top')">◀　最初の画面へ</button>
+    </div>
+  </div>
   <div class="disclaimer">その日の運気の場所と、その日とあなたの相性。二つを重ねて、一日の過ごし方をお伝えします。</div>
   <footer>― 三命 ―</footer>
   </div>
@@ -1805,6 +1809,7 @@ function latestProfile(){
     const p=JSON.parse(localStorage.getItem('sanmei_profile')||'null');
     if(p&&validDate(+p.y,+p.m,+p.d)){
       const r={y:+p.y,m:+p.m,d:+p.d,male:p.male};
+      if(p.name) r.name=p.name;   // ホロスコープが控えた名前があれば持ち出す
       if(typeof p.h==='number'&&p.h>=0&&p.h<=23){ r.h=p.h; r.mi=(typeof p.mi==='number'&&p.mi>=0&&p.mi<=59)?p.mi:0; }
       return r;
     }
@@ -1832,6 +1837,20 @@ function goAishou(){
   }catch(e){}
 }
 
+// 三日占断の下の「今日の星占いへ」：分かっている生年月日と名前を持たせ、7番へ着地させる
+function toTodayHoroscope(a){
+  try{
+    const p=latestProfile();
+    let url='https://punnti333.github.io/horoscope/?go=today';
+    if(p){
+      url+='&y='+p.y+'&m='+p.m+'&d='+p.d;
+      if(typeof p.h==='number') url+='&h='+p.h+'&mi='+(p.mi||0);
+      if(p.name) url+='&n='+encodeURIComponent(p.name);
+    }
+    a.href=url;
+  }catch(e){}
+  return true;
+}
 // トップの「ホロスコープ」カード：踏む直前に、分かっている生年月日をURLへ足す
 function toHoroscopeLink(a){
   try{
@@ -2110,14 +2129,29 @@ function divineDaily(){
     if(ay_&&am_&&ad_&&!ay_.value){ ay_.value=p.y; am_.value=p.m; ad_.value=p.d; }
   }catch(e){}
 })();
-// ホロスコープから渡された生年月日があれば受け取り、運勢占断を開いて入れておく
+// ホロスコープから渡された生年月日があれば受け取る。
+// go=daily がついていれば三日占断へ、なければ従来どおり運勢占断へ着地します。
 (function receiveFromHoroscope(){
   const q=new URLSearchParams(location.search);
   const qy=q.get('y'),qm=q.get('m'),qd=q.get('d');
   if(qy&&qm&&qd){
     const yi=document.getElementById('y'),mi=document.getElementById('m'),di=document.getElementById('d');
     if(yi&&mi&&di){ yi.value=qy; mi.value=qm; di.value=qd; }
-    try{ go('fortune'); }catch(e){}
+    // 三日占断が自分の控えを読めるように、渡された日付を先に保存しておく
+    if(q.get('go')==='daily'){
+      try{
+        const prev=JSON.parse(localStorage.getItem('sanmei_profile')||'null')||{};
+        const obj={y:+qy,m:+qm,d:+qd};
+        if(prev&&+prev.y===+qy&&+prev.m===+qm&&+prev.d===+qd){
+          if(typeof prev.male!=='undefined') obj.male=prev.male;
+          if(prev.name) obj.name=prev.name;
+        }
+        localStorage.setItem('sanmei_profile',JSON.stringify(obj));
+      }catch(e){}
+      try{ goDaily(); }catch(e){ try{ go('fortune'); }catch(e2){} }
+    }else{
+      try{ go('fortune'); }catch(e){}
+    }
   }
 })();
 
