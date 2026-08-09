@@ -2065,9 +2065,18 @@ function goDaily(){
     const p=JSON.parse(localStorage.getItem('sanmei_profile')||'null');
     const yi=document.getElementById('dy'),mi=document.getElementById('dm'),di=document.getElementById('dd');
     const my=+document.getElementById('y').value,mm=+document.getElementById('m').value,md=+document.getElementById('d').value;
-    if(!yi.value){
-      if(p&&p.y){ yi.value=p.y; mi.value=p.m; di.value=p.d; }
-      else if(validDate(my,mm,md)){ yi.value=my; mi.value=mm; di.value=md; }
+    /* 欄が空のときだけ入れる、では古い日付が残ってしまう。
+       いま占っている人（運勢占断の入力欄、なければ控え）に必ず合わせます。 */
+    let ny=null,nm=null,nd=null;
+    if(validDate(my,mm,md)){ ny=my; nm=mm; nd=md; }
+    else if(p&&p.y&&validDate(+p.y,+p.m,+p.d)){ ny=+p.y; nm=+p.m; nd=+p.d; }
+    if(ny){
+      const changed=(+yi.value!==ny||+mi.value!==nm||+di.value!==nd);
+      yi.value=ny; mi.value=nm; di.value=nd;
+      if(changed){
+        const res=document.getElementById('daily-result');
+        if(res){ res.innerHTML=''; res.classList.remove('show'); }
+      }
     }
     if(validDate(+yi.value,+mi.value,+di.value)) divineDaily();
   }catch(e){}
