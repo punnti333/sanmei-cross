@@ -1368,8 +1368,23 @@ function savePerson(iy,im,id){
   if(!nm)return;
   // どの欄から保存したかで、性別も一緒に控える
   const male=(iy==='by')?isMaleB:(iy==='ay')?isMaleA:isMale;
+  /* 出生時刻が入っていれば一緒に控える。名簿はホロスコープと共有しているので、
+     ここで持たせておくと、向こうで時刻を聞かれずに済みます。 */
+  const rec={name:nm.slice(0,12),y:y,m:m,d:d,male:male};
+  try{
+    const hh=document.getElementById('bh'), mm2=document.getElementById('bmi');
+    if(iy==='y'&&hh&&hh.value!==''){
+      const hv=+hh.value, miv=(mm2&&mm2.value!=='')?+mm2.value:0;
+      if(hv>=0&&hv<=23&&miv>=0&&miv<=59){ rec.h=hv; rec.mi=miv; }
+    }
+    // 名簿に無いときは、控え（sanmei_profile）の時刻を使う
+    if(typeof rec.h==='undefined'){
+      const p=JSON.parse(localStorage.getItem('sanmei_profile')||'null');
+      if(p&&+p.y===y&&+p.m===m&&+p.d===d&&typeof p.h==='number'){ rec.h=p.h; rec.mi=p.mi||0; }
+    }
+  }catch(e){}
   let list=loadPeople().filter(function(e){return e.name!==nm;});
-  list.unshift({name:nm.slice(0,12),y:y,m:m,d:d,male:male});
+  list.unshift(rec);
   if(list.length>12)list=list.slice(0,12);
   savePeople(list);
   if(iy==='y') setCurrentName(nm);
