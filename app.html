@@ -2186,7 +2186,17 @@ const UNLOCK_MARK = '開門'; // 記事の有料部分に入れた合図の文�
 function isFreePeriod(){ return new Date() <= FREE_END; }
 function openGate(){ document.getElementById('member-gate').classList.add('on'); }
 // 会員として読めるか
-function canRead(){ return isFreePeriod() || window.__unlocked; }
+/* 作者用の合言葉。?key=ナラちゃん を一度つけて開くと、この端末が覚えます。
+   codocに所有者としてログインしていると購読できないため、その回避です。 */
+(function(){
+  try{
+    const OWNER_KEY='ナラちゃん';
+    const q=new URLSearchParams(location.search);
+    if(q.get('key')===OWNER_KEY) localStorage.setItem('owner_pass',OWNER_KEY);
+  }catch(e){}
+})();
+function isOwner(){ try{ return localStorage.getItem('owner_pass')==='ナラちゃん'; }catch(e){ return false; } }
+function canRead(){ return isFreePeriod() || window.__unlocked || isOwner(); }
 // 続きを隠すときの差し込み。信号は色そのものが答えになるため、
 // ぼかしではなくブロックごと入れ替える。
 // 中身は出したうえでぼかす。枠が空になるより「隠れている」と伝わる。
