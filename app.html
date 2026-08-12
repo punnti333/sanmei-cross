@@ -1383,9 +1383,16 @@ function savePerson(iy,im,id){
       if(p&&+p.y===y&&+p.m===m&&+p.d===d&&typeof p.h==='number'){ rec.h=p.h; rec.mi=p.mi||0; }
     }
   }catch(e){}
-  let list=loadPeople().filter(function(e){return e.name!==nm;});
+  const PEOPLE_MAX=50;
+  const before=loadPeople();
+  const isUpdate=before.some(function(e){return e.name===nm;});
+  let list=before.filter(function(e){return e.name!==nm;});
+  // いっぱいのときは黙って消さず、知らせて止める
+  if(!isUpdate && list.length>=PEOPLE_MAX){
+    alert('保存できるのは'+PEOPLE_MAX+'人までです。\nいらない方を消してから、もう一度お試しください。');
+    return;
+  }
   list.unshift(rec);
-  if(list.length>12)list=list.slice(0,12);
   savePeople(list);
   if(iy==='y') setCurrentName(nm);
 }
