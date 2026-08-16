@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202608161622';
+var APP_VERSION = '202608161641';
 </script>
 <script>
 (function(){
@@ -427,9 +427,9 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     <div style="font-size:12.5px;color:var(--washi2);opacity:.65;margin:-10px 0 16px;letter-spacing:.06em;">一度占うと生年月日と性別が記憶され、次からは自動で入ります（この端末のみ）</div>
     <div class="fields">
       <div class="field"><label>生まれた年（西暦 1930〜2030）</label>
-        <input type="number" id="y" min="1930" max="2030" placeholder="1990"></div>
-      <div class="field"><label>月</label><input type="number" id="m" min="1" max="12" placeholder="7"></div>
-      <div class="field"><label>日</label><input type="number" id="d" min="1" max="31" placeholder="3"></div>
+        <input type="tel" inputmode="numeric" id="y" min="1930" max="2030" placeholder="1990"></div>
+      <div class="field"><label>月</label><input type="tel" inputmode="numeric" id="m" min="1" max="12" placeholder="7"></div>
+      <div class="field"><label>日</label><input type="tel" inputmode="numeric" id="d" min="1" max="31" placeholder="3"></div>
       <div class="field"><label>性別</label>
         <div class="sex-toggle">
           <button type="button" id="male" class="on" onclick="setSex(true)">男</button>
@@ -458,9 +458,9 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         <div class="field" style="flex:1 1 100%;">
           <label style="opacity:.7;">生まれた時間（空欄でもOK）</label>
           <div style="display:flex;align-items:center;gap:8px;">
-            <input type="number" id="bh" min="0" max="23" placeholder="時" style="flex:1;">
+            <input type="tel" inputmode="numeric" id="bh" min="0" max="23" placeholder="時" style="flex:1;">
             <span style="color:var(--washi2);opacity:.7;font-size:14px;">時</span>
-            <input type="number" id="bmi" min="0" max="59" placeholder="分" style="flex:1;">
+            <input type="tel" inputmode="numeric" id="bmi" min="0" max="59" placeholder="分" style="flex:1;">
             <span style="color:var(--washi2);opacity:.7;font-size:14px;">分</span>
           </div>
           <div style="font-size:12px;color:var(--washi2);opacity:.7;margin-top:6px;line-height:1.6;">入れると月星座がより正確になります。</div>
@@ -491,9 +491,9 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     <div style="font-size:12.5px;color:var(--washi2);opacity:.65;margin:-10px 0 16px;letter-spacing:.06em;">一度占うと記憶され、次からは開くだけで表示されます（この端末のみ）</div>
     <div class="fields">
       <div class="field"><label>生まれた年（西暦 1930〜2030）</label>
-        <input type="number" id="dy" min="1930" max="2030" placeholder="1990"></div>
-      <div class="field"><label>月</label><input type="number" id="dm" min="1" max="12" placeholder="7"></div>
-      <div class="field"><label>日</label><input type="number" id="dd" min="1" max="31" placeholder="3"></div>
+        <input type="tel" inputmode="numeric" id="dy" min="1930" max="2030" placeholder="1990"></div>
+      <div class="field"><label>月</label><input type="tel" inputmode="numeric" id="dm" min="1" max="12" placeholder="7"></div>
+      <div class="field"><label>日</label><input type="tel" inputmode="numeric" id="dd" min="1" max="31" placeholder="3"></div>
       <button class="divine-btn" onclick="divineDaily()">三　日　占　断</button>
     </div>
   </div>
@@ -521,12 +521,12 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     <div class="form-title">二人の生まれた日を入れてください</div>
     <div class="pair">
       <div class="person"><div class="person-h">あなた</div>
-        <div class="prow"><input type="number" id="ay" placeholder="年 1990">
-          <input type="number" id="am" placeholder="月 7"><input type="number" id="ad" placeholder="日 3"></div>
+        <div class="prow"><input type="tel" inputmode="numeric" id="ay" placeholder="年 1990">
+          <input type="tel" inputmode="numeric" id="am" placeholder="月 7"><input type="tel" inputmode="numeric" id="ad" placeholder="日 3"></div>
         <div class="sex-mini"><button type="button" id="a-male" class="on" onclick="setSexA(true)">男</button><button type="button" id="a-female" onclick="setSexA(false)">女</button></div></div>
       <div class="person"><div class="person-h">お相手</div>
-        <div class="prow"><input type="number" id="by" placeholder="年 1988">
-          <input type="number" id="bm" placeholder="月 4"><input type="number" id="bd" placeholder="日 12"></div>
+        <div class="prow"><input type="tel" inputmode="numeric" id="by" placeholder="年 1988">
+          <input type="tel" inputmode="numeric" id="bm" placeholder="月 4"><input type="tel" inputmode="numeric" id="bd" placeholder="日 12"></div>
         <div class="sex-mini"><button type="button" id="b-male" class="on" onclick="setSexB(true)">男</button><button type="button" id="b-female" onclick="setSexB(false)">女</button></div></div>
     </div>
     <div id="people-b" class="people-wrap"></div>
