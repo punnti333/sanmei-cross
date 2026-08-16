@@ -2192,12 +2192,16 @@ function openGate(){ document.getElementById('member-gate').classList.add('on');
    codocに所有者としてログインしていると購読できないため、その回避です。 */
 (function(){
   try{
-    const OWNER_KEY='ナラちゃん';
+    const OWNER_KEY='nara';
+    // 以前の合言葉も通す。すでに記録を持っている端末は、入り直さずにそのまま使える。
+    const OWNER_KEYS=['nara','ナラちゃん'];
     const q=new URLSearchParams(location.search);
-    if(q.get('key')===OWNER_KEY) localStorage.setItem('owner_pass',OWNER_KEY);
+    if(OWNER_KEYS.includes(q.get('key'))) localStorage.setItem('owner_pass',OWNER_KEY);
+    const saved=localStorage.getItem('owner_pass');
+    if(OWNER_KEYS.includes(saved) && saved!==OWNER_KEY) localStorage.setItem('owner_pass',OWNER_KEY);  // 静かに書き換える
   }catch(e){}
 })();
-function isOwner(){ try{ return localStorage.getItem('owner_pass')==='ナラちゃん'; }catch(e){ return false; } }
+function isOwner(){ try{ return ['nara','ナラちゃん'].includes(localStorage.getItem('owner_pass')); }catch(e){ return false; } }
 function canRead(){ return isFreePeriod() || window.__unlocked || isOwner(); }
 // 続きを隠すときの差し込み。
 // ※以前はここに実際の鑑定文（inner）を渡し、CSSでぼかすだけだったため、
