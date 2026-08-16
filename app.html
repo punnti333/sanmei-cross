@@ -3,6 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>
+var APP_VERSION = '202608161622';
+</script>
+<script>
+(function(){
+  try{
+    if(location.protocol==='file:') return;
+    if(sessionStorage.getItem('checked_version')) return;
+    sessionStorage.setItem('checked_version','1');
+    fetch(location.pathname + '?_=' + Date.now(), {cache:'no-store'})
+      .then(function(r){ return r.text(); })
+      .then(function(txt){
+        var m = txt.match(/APP_VERSION\s*=\s*'([^']+)'/);
+        if(!m) return;
+        if(m[1] !== APP_VERSION){
+          location.reload(true);
+        }
+      })
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
 <title>三命クロス法</title>
 <style>@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
 :root{--sumi:#14110f;--sumi2:#1d1916;--washi:#ece3d0;--washi2:#ded2b8;
@@ -312,6 +337,12 @@ text-align:center;letter-spacing:.2em;margin-bottom:8px;}
 .gate-sub{text-align:center;color:var(--washi2);font-size:13.5px;letter-spacing:.1em;margin-bottom:28px;line-height:2;}
 .gate-box{border:1px solid rgba(201,164,76,.35);border-radius:14px;padding:20px 18px;margin-bottom:22px;
 background:linear-gradient(160deg,var(--sumi2),#191512);}
+.gate-fold summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;}
+.gate-fold summary::-webkit-details-marker{display:none;}
+.gate-fold .fold-arrow{font-size:12px;opacity:.6;transition:transform .2s;}
+.gate-fold[open] .fold-arrow{transform:rotate(180deg);}
+.gate-fold ul{margin-top:12px;}
+
 .gate-box h3{font-family:'Shippori Mincho',serif;font-size:15px;color:var(--kin);letter-spacing:.2em;margin:0 0 12px;}
 .gate-box ul{margin:0;padding-left:1.2em;color:var(--washi);font-size:13.5px;line-height:2.1;letter-spacing:.03em;}
 .gate-box ul b{color:var(--kin2);}
@@ -335,9 +366,12 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
 
   <div id="screen-top" class="screen active">
   <div id="free-banner" class="freebanner" onclick="openGate()" style="display:block;">
-    <b>8月15日まで 無料公開中</b>（あと<span id="fb-days">--</span>日）
-    <span class="fb-sub">以降は月330円の会員制になります</span>
-    <span style="display:inline-block;margin-top:9px;padding:10px 26px;background:#c9a44c;color:#14110f;border-radius:24px;font-weight:700;font-size:15px;letter-spacing:.08em;box-shadow:0 2px 8px rgba(0,0,0,.35)">▶ 会員登録はこちら</span>
+    <div id="fb-inner-free">
+      <b>8月15日まで 無料公開中</b>（あと<span id="fb-days">--</span>日）
+      <span class="fb-sub">以降は月330円の会員制になります</span>
+    </div>
+    <div id="fb-inner-paid" style="display:none;"></div>
+    <span style="display:inline-block;margin-top:9px;padding:10px 26px;background:#c9a44c;color:#14110f;border-radius:24px;font-weight:700;font-size:15px;letter-spacing:.08em;box-shadow:0 2px 8px rgba(0,0,0,.35)">▶ 会員登録・ログインはこちら</span>
   </div>
   <header>
     <div class="seal">三命<br>占断</div>
@@ -515,8 +549,8 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
   <div class="gate-inner">
     <div class="gate-title">三命クロス法</div>
     <div class="gate-sub" id="gate-msg">会員のご案内</div>
-    <div class="gate-box">
-      <h3>会員プランでできること</h3>
+    <details class="gate-box gate-fold">
+      <summary><h3 style="display:inline;">会員プランでできること</h3><span class="fold-arrow">▼</span></summary>
       <ul>
         <li>今日の運勢（昨日・今日・明日の三日占断）</li>
         <li>運勢占断（年運・月運の信号と、いまの流れ）</li>
@@ -524,7 +558,7 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         <li>ホロスコープ（西洋占星術で本質を読む）</li>
         <li>月330円で、すべてお使いいただけます</li>
       </ul>
-    </div>
+    </details>
     <div class="gate-box">
       <h3>お支払いについて</h3>
       <ul>
@@ -2239,8 +2273,17 @@ function closeGate(){
       document.getElementById('gate-msg').innerHTML='会員のご案内<br>（8月15日までは全機能を無料でお使いいただけます）';
     }else{
       // 無料期間終了後：入口は開けておき、結果の途中で止める
-      banner.style.display='none';
       document.getElementById('gate-msg').innerHTML='ここから先は会員の方の占い処です<br>ご購読またはログインをお願いします';
+      // 「登録の仕方が分からない」という声があったため、
+      // 未購読の人には、無料期間中と同じ位置に、常時、登録手順の案内を出しておく。
+      // すでに購読・ログイン済みの人には出さない。
+      if(isOwner() || window.__unlocked){
+        banner.style.display='none';
+      }else{
+        banner.style.display='block';
+        document.getElementById('fb-inner-free').style.display='none';
+        document.getElementById('fb-inner-paid').style.display='block';
+      }
     }
     // 解錠の見張り：codocが有料部分（合図の文字）を描画したら開門
     const entry=document.getElementById('codoc-entry-jRBN6Pyw9w');
@@ -2249,7 +2292,7 @@ function closeGate(){
         if(entry.innerText && entry.innerText.indexOf(UNLOCK_MARK)>=0){
           window.__unlocked=true;
           document.getElementById('member-gate').classList.remove('on');
-          const b=document.getElementById('free-banner'); if(b&&!isFreePeriod()) b.style.display='none';
+          const b=document.getElementById('free-banner'); if(b) b.style.display='none';  // 解錠できた時点で常に隠す
           return true;
         }
         return false;
