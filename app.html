@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202608161641';
+var APP_VERSION = '202608301504';
 </script>
 <script>
 (function(){
@@ -190,6 +190,15 @@ font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-co
 .chip-kuubou{background:#000;border:1px solid var(--shu);color:#f0857a;font-weight:700;}
 .chip-kokoro{background:#0d1620;border:1px solid var(--ai);color:#8fb3d4;font-weight:700;}
 .chip-stable{border:1px solid rgba(201,164,76,.4);color:var(--kin2);}
+/* 三命殺の震度バッジ（2026-08-30 追加）：鑑定シート側の☆＝震度5／★＝震度7という
+   対応をそのままバッジ化。信号（青黄赤）の判定には一切関わらない、表示専用。 */
+.chip-jishin7{background:#2a0e0c;border:1px solid #e0453c;color:#ff8a80;font-weight:700;}
+.chip-jishin5{background:#241a08;border:1px solid #e8a545;color:#f0c47a;}
+.chip-jishin3{background:#08201f;border:1px solid #5ac8be;color:#8fe0d6;}
+/* 「この年のあなたの運気」の見出し（宮名＋◎○△▲×）の右に添える震度バッジ。
+   個別要素の一覧（chips）とは違う「総評」なので、見出し行に横並びで置く（2026-08-30 追加）。 */
+.detail .big .jishin-inline{display:inline-block;margin-left:9px;vertical-align:middle;
+  font-family:sans-serif;font-size:13px;padding:2px 9px;border-radius:12px;letter-spacing:.04em;}
 .flow{margin-top:18px;background:#0f0c0a;border:1px solid rgba(201,164,76,.14);border-radius:10px;
 padding:16px 20px;font-size:15px;line-height:2.0;color:var(--washi2);}
 .flow b{color:var(--kin2);font-weight:700;}
@@ -1072,6 +1081,31 @@ function dayZhi(y,m,d){
 function isChuYear(y,m,d,ty){
   return CHU_PAIRS[dayZhi(y,m,d)]===DATA.yearZhi[ty];
 }
+
+// ===== 三命殺（震度表示）用の追加計算（2026-08-30 追加）=====
+// このアプリには月柱が無いため、鑑定シート版12要素のうち月柱併臨・天戦地冲(月柱)の
+// 2つは含めない。それ以外（冲・日柱併臨・空亡・天戦地冲(日柱)・本命暗剣殺・
+// 傾斜暗剣殺・傾斜五黄殺・本命中宮/艮宮/坎宮の10要素）で判定する。これは鑑定シートが
+// 2026-08-25に12要素へ拡張する前の、もとの10要素版とちょうど同じ内容になる
+// （実測5.21%・約19年に1回。このファイルでも300人×101年のシミュレーションで5.25%を確認）。
+// 信号（青黄赤）の判定には一切関わらない、表示専用の追加。
+const KAN10=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+// 干の七殺（同じ陰陽で剋し合う）関係。鑑定シート版のTENSEN_KANと同じ対応表。
+const TENSEN_KAN={甲:"戊",乙:"己",丙:"庚",丁:"辛",戊:"壬",己:"癸",庚:"甲",辛:"乙",壬:"丙",癸:"丁"};
+// 年運の年干。1984年=甲子を基準にした単純な10周期（DATA.yearZhiの支の並びと同じ考え方）。
+function yearKan(ty){ return KAN10[((ty-4)%10+10)%10]; }
+function dayKan(y,m,d){
+  const days=toDays(y,m,d);
+  const num=(((DATA.dayBase.num+(days-DATA.dayBase.days))%60)+60)%60;
+  return KAN10[num%10];
+}
+// 天戦地冲：干が七殺、かつ支が冲。鑑定シート版isTensenChichuと同じ定義。
+function isTensenChichuDay(dKan,dShi,kan,shi){
+  if(!dKan||!dShi||!kan||!shi) return false;
+  const kanOk=(TENSEN_KAN[dKan]===kan)||(TENSEN_KAN[kan]===dKan);
+  const shiOk=(CHU_PAIRS[dShi]===shi);
+  return kanOk&&shiOk;
+}
 const SCALE=["◎","○","△","▲","×"];
 function downMark(mark,steps){const i=SCALE.indexOf(mark);return SCALE[Math.min(i+steps,SCALE.length-1)];}
 // 暗剣殺：その盤で五黄土星が入る宮の「真向かい」に自分の星が回座しているか
@@ -1628,6 +1662,32 @@ function divine(){
   if(steps>0 && final==='▲' && (base==='◎'||base==='○')){
     punch='地力はある年。動くなら小さく、じっくり。勢いまかせだけは禁物です';
   }
+  // 三命殺（震度表示、2026-08-30 追加）。信号(color/final)には一切関わらない。
+  const yKan=yearKan(ty), yShi=DATA.yearZhi[ty]||'子';
+  const dKan_=dayKan(y,m,d), dShi_=dayZhi(y,m,d);
+  const isHeirinN=(yKan===dKan_ && yShi===dShi_);
+  const isTensenN=isTensenChichuDay(dKan_,dShi_,yKan,yShi);
+  const _sanju=[];
+  if(chu)                     _sanju.push('冲');
+  if(isHeirinN)                _sanju.push('日柱併臨');
+  if(kuubou)                   _sanju.push('空亡');
+  if(isTensenN)                _sanju.push('天戦地冲（日柱）');
+  if(anken)                    _sanju.push('本命暗剣殺');
+  if(ksatsu==='anken')         _sanju.push('傾斜暗剣殺');
+  if(ksatsu==='goou'&&star!==5) _sanju.push('傾斜五黄殺');  // 五黄土星の人には五黄殺を立てない
+  if(palace==='中宮')           _sanju.push('本命中宮');
+  if(palace==='艮')             _sanju.push('本命艮宮');
+  if(palace==='坎')             _sanju.push('本命坎宮');
+  const isSanjusatsu=_sanju.length>=3;
+  const isSanjuWeak=_sanju.length===2;
+  // 震度3（2026-08-30 追加）：大運交替期（人生の転機）と、三命殺の要素がちょうど1つ
+  // 重なった年。大運交替そのものは凶ではなく「変化」なので、★☆(3要素以上／2要素)
+  // とは別の切り口の総評として、震度7・震度5と並べて出す。
+  const isJishin3=change && _sanju.length===1;
+  const jishinTag=
+    isSanjusatsu?'<span class="jishin-inline chip-jishin7" title="'+_sanju.join('・')+'（三命殺・震度7相当）">震度7</span>':
+    isSanjuWeak?'<span class="jishin-inline chip-jishin5" title="'+_sanju.join('・')+'（参考・震度5相当）">震度5</span>':
+    isJishin3?'<span class="jishin-inline chip-jishin3" title="人生の切り替え時期・'+_sanju.join('・')+'（参考・震度3相当）">震度3</span>':'';
   let chips='';
   if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
   if(chu) chips+='<span class="chip chip-kuubou">冲の年（人間関係、環境の大きな変化に注意）</span> ';
@@ -1668,7 +1728,7 @@ function divine(){
     (function(){
       if(!canRead()) return '<div class="detail">'+blurHTML('この年の運気')+'</div>';
       const _in='<div class="lab">'+ty+'年のあなたの運気</div>'+
-        '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span></div>'+
+        '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span>'+jishinTag+'</div>'+
         '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
         '<div class="note">'+pp+'</div>'+chips;
       return '<div class="detail">'+_in+'</div>';
