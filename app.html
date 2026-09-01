@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202608301504';
+var APP_VERSION = '202609010900';
 </script>
 <script>
 (function(){
@@ -1719,12 +1719,18 @@ function divine(){
   const _sig='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
     '<div class="mark">'+final+'</div><div class="verdict">'+verdict+'</div>'+
     '<div class="punch">'+punch+'</div></div>';
-  el.innerHTML=(canRead()?_sig:'')+
-    '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
-    '<div class="type-name">「'+t16.name+'」タイプ</div>'+
-    '<div class="note">'+t16.body+'</div>'+
-    '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
-    (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'+
+  // 2026-09-01 追加：会員でなくても「今年」の信号カードだけは無料で見せる。
+  // 去年・来年は対象外（baseYearは立春基準の「今年」。ty===baseYearのときだけ無料）。
+  const _yearFree=(ty===baseYear);
+  el.innerHTML=((canRead()||_yearFree)?_sig:'')+
+    '<div class="detail-grid">'+
+    (canRead()
+      ? '<div class="detail"><div class="lab">あなたの持ち味</div>'+
+        '<div class="type-name">「'+t16.name+'」タイプ</div>'+
+        '<div class="note">'+t16.body+'</div>'+
+        '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
+        (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'
+      : '<div class="detail">'+blurHTML('あなたの持ち味')+'</div>')+
     (function(){
       if(!canRead()) return '<div class="detail">'+blurHTML('この年の運気')+'</div>';
       const _in='<div class="lab">'+ty+'年のあなたの運気</div>'+
@@ -1736,8 +1742,11 @@ function divine(){
     (canRead()
       ? westernYearHTML(y,m,d,ty)+'<div class="flow">'+flowMsg+'</div>'+
         shareRowHTML('私は「'+t16.name+'」タイプ。'+ty+'年は'+color+'信号「'+verdict+'」でした！ #三命クロス法')
-      : lockHTML(ty+'年の信号',
-          '進んでいい年か、こらえる年か。<br>信号の色と、その年の運気をお伝えします。'));
+      : (_yearFree
+          ? lockHTML('あなたの持ち味と、この先の見通し',
+              'なぜこの信号なのか、来年の見通しまで。<br>会員の方はここから先もご覧いただけます。')
+          : lockHTML(ty+'年の信号',
+              '進んでいい年か、こらえる年か。<br>信号の色と、その年の運気をお伝えします。')));
   el.classList.add('show'); showAgain(el.id); el.scrollIntoView({behavior:'smooth',block:'start'});
   saveHistory(y,m,d,t16.name);
 }function divineMonth(y,m,d){
@@ -1776,11 +1785,14 @@ function divine(){
     '<div class="mark">'+mfinal+'</div><div class="verdict">'+verdict+'</div>'+
     '<div class="punch">'+punch+'</div></div>';
   el.innerHTML=(canRead()?_sig:'')+
-    '<div class="detail-grid"><div class="detail"><div class="lab">あなたの持ち味</div>'+
-    '<div class="type-name">「'+t16.name+'」タイプ</div>'+
-    '<div class="note">'+t16.body+'</div>'+
-    '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
-    (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'+
+    '<div class="detail-grid">'+
+    (canRead()
+      ? '<div class="detail"><div class="lab">あなたの持ち味</div>'+
+        '<div class="type-name">「'+t16.name+'」タイプ</div>'+
+        '<div class="note">'+t16.body+'</div>'+
+        '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
+        (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'
+      : '<div class="detail">'+blurHTML('あなたの持ち味')+'</div>')+
     (function(){
       if(!canRead()) return '<div class="detail">'+blurHTML('この月の運気')+'</div>';
       const _in='<div class="lab">'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）のあなたの運気</div>'+
