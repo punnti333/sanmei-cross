@@ -1082,12 +1082,10 @@ function isChuYear(y,m,d,ty){
   return CHU_PAIRS[dayZhi(y,m,d)]===DATA.yearZhi[ty];
 }
 
-// ===== 三命殺（震度表示）用の追加計算（2026-08-30 追加）=====
-// このアプリには月柱が無いため、鑑定シート版12要素のうち月柱併臨・天戦地冲(月柱)の
-// 2つは含めない。それ以外（冲・日柱併臨・空亡・天戦地冲(日柱)・本命暗剣殺・
-// 傾斜暗剣殺・傾斜五黄殺・本命中宮/艮宮/坎宮の10要素）で判定する。これは鑑定シートが
-// 2026-08-25に12要素へ拡張する前の、もとの10要素版とちょうど同じ内容になる
-// （実測5.21%・約19年に1回。このファイルでも300人×101年のシミュレーションで5.25%を確認）。
+// ===== 三命殺（震度表示）用の追加計算（2026-08-30 追加、2026-09-04 月柱併臨・天戦地冲(月柱)を追加）=====
+// 冲・日柱併臨・空亡・天戦地冲(日柱)・月柱併臨・天戦地冲(月柱)・本命暗剣殺・
+// 傾斜暗剣殺・傾斜五黄殺・本命中宮/艮宮/坎宮の12要素で判定する。鑑定シート版と同じ12要素版。
+// （旧10要素版の実測は5.21%・約19年に1回。12要素化後の鑑定シート側実測は約6.10%・約16.4年に1回）。
 // 信号（青黄赤）の判定には一切関わらない、表示専用の追加。
 const KAN10=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
 // 干の七殺（同じ陰陽で剋し合う）関係。鑑定シート版のTENSEN_KANと同じ対応表。
@@ -1105,6 +1103,21 @@ function isTensenChichuDay(dKan,dShi,kan,shi){
   const kanOk=(TENSEN_KAN[dKan]===kan)||(TENSEN_KAN[kan]===dKan);
   const shiOk=(CHU_PAIRS[dShi]===shi);
   return kanOk&&shiOk;
+}
+// ===== 月柱（節入り基準・五虎遁年法）2026-09-04 追加 =====
+// 月支は既存のmonthInfo()が出す節月番号（1=寅〜12=丑）をそのまま12支に対応させる。
+// 月干は五虎遁（年干→寅月干の開始インデックス。鑑定シート版GOKOUと同じ対応表）で決める。
+// 年干は「立春基準で補正した年」（monthInfo()のyearAdj）のものを使う＝年柱の年干と同じ考え方。
+const MONTH_SHI=['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+const GOKOU={甲:2,己:2,乙:4,庚:4,丙:6,辛:6,丁:8,壬:8,戊:0,癸:0};
+function monthPillar(y,m,d){
+  const info=monthInfo(y,m,d);
+  const sm=info.setsuMonth;
+  const shi=MONTH_SHI[(sm-1+12)%12];
+  const yKanNatal=yearKan(info.yearAdj);
+  const start=GOKOU[yKanNatal]!==undefined?GOKOU[yKanNatal]:0;
+  const kan=KAN10[(start+(sm-1))%10];
+  return {kan,shi};
 }
 const SCALE=["◎","○","△","▲","×"];
 function downMark(mark,steps){const i=SCALE.indexOf(mark);return SCALE[Math.min(i+steps,SCALE.length-1)];}
@@ -1667,11 +1680,16 @@ function divine(){
   const dKan_=dayKan(y,m,d), dShi_=dayZhi(y,m,d);
   const isHeirinN=(yKan===dKan_ && yShi===dShi_);
   const isTensenN=isTensenChichuDay(dKan_,dShi_,yKan,yShi);
+  const mP_=monthPillar(y,m,d);
+  const isHeirinM=(yKan===mP_.kan && yShi===mP_.shi);
+  const isTensenM=isTensenChichuDay(mP_.kan,mP_.shi,yKan,yShi);
   const _sanju=[];
   if(chu)                     _sanju.push('冲');
   if(isHeirinN)                _sanju.push('日柱併臨');
   if(kuubou)                   _sanju.push('空亡');
   if(isTensenN)                _sanju.push('天戦地冲（日柱）');
+  if(isHeirinM)                _sanju.push('月柱併臨');
+  if(isTensenM)                _sanju.push('天戦地冲（月柱）');
   if(anken)                    _sanju.push('本命暗剣殺');
   if(ksatsu==='anken')         _sanju.push('傾斜暗剣殺');
   if(ksatsu==='goou'&&star!==5) _sanju.push('傾斜五黄殺');  // 五黄土星の人には五黄殺を立てない
