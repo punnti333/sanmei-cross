@@ -195,6 +195,9 @@ font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-co
 .chip-jishin7{background:#2a0e0c;border:1px solid #e0453c;color:#ff8a80;font-weight:700;}
 .chip-jishin5{background:#241a08;border:1px solid #e8a545;color:#f0c47a;}
 .chip-jishin3{background:#08201f;border:1px solid #5ac8be;color:#8fe0d6;}
+/* 併臨・天戦地冲チップ（2026-09-04 追加）：先生の実感「併臨・天戦地冲は空亡・冲より
+   別格に事件が起きる」に基づき、震度7バッジと同系色（最も強い赤）にしている。 */
+.chip-heirin{background:#2a0e0c;border:1px solid #e0453c;color:#ff8a80;font-weight:700;}
 /* 「この年のあなたの運気」の見出し（宮名＋◎○△▲×）の右に添える震度バッジ。
    個別要素の一覧（chips）とは違う「総評」なので、見出し行に横並びで置く（2026-08-30 追加）。 */
 .detail .big .jishin-inline{display:inline-block;margin-left:9px;vertical-align:middle;
@@ -1710,10 +1713,14 @@ function divine(){
   if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
   if(chu) chips+='<span class="chip chip-kuubou">冲の年（人間関係、環境の大きな変化に注意）</span> ';
   if(anken) chips+='<span class="chip chip-kuubou">暗剣殺の年（思わぬ横やり・アクシデントに注意）</span> ';
+  if(isHeirinN) chips+='<span class="chip chip-heirin">日柱併臨の年（人生の大きな出来事が起きる年）</span> ';
+  if(isTensenN) chips+='<span class="chip chip-heirin">天戦地冲・日柱の年（夫婦・家庭の、大転換が起きる年）</span> ';
+  if(isHeirinM) chips+='<span class="chip chip-heirin">月柱併臨の年（仕事・環境の大きな変化あり）</span> ';
+  if(isTensenM) chips+='<span class="chip chip-heirin">天戦地冲・月柱の年（社会環境の大転換が起きる年）</span> ';
   if(ksatsu==='goou') chips+='<span class="chip chip-kokoro">心が五黄殺の年（自分から招く乱れに注意）</span> ';
   if(ksatsu==='anken') chips+='<span class="chip chip-kokoro">心が暗剣殺の年（迷い・判断の曇りに注意）</span> ';
   if(change) chips+='<span class="chip chip-change">人生の切り替え時期</span> ';
-  if(!kuubou&&!chu&&!change&&!anken&&!ksatsu) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
+  if(!kuubou&&!chu&&!change&&!anken&&!ksatsu&&!isHeirinN&&!isTensenN&&!isHeirinM&&!isTensenM) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
   let st; if(steps===0) st='特に重なる時期はなく、運気のまま読めます';
   else{let p=[];if(kuubou)p.push('運気の沈む時期');if(anken)p.push('暗剣殺（思わぬ横やりが入りやすい年）');st=p.join('と')+'が重なっているぶん、慎重にいきたい一年です';}
   const pp = steps===0 ? PALACE_PUNCH[palace]
