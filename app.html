@@ -2404,17 +2404,10 @@ function closeGate(){
     if(entry){
       const check=function(){
         if(window.__unlocked) return true;
-        // 2026-09-12 修正（1回目）：最初に取得した entry だけを見続けると、
-        // codocがそのノードを丸ごと差し替えた場合に追従できないため、
-        // 確認のたびに毎回そのidの要素を取り直すようにした。
-        // ↓
-        // 2026-09-12 修正（2回目）：それでも実機で「開門は画面に出ているのに
-        // 解錠されない」現象が続いたため、codocが#codoc-entry-jRBN6Pyw9wの
-        // 中（またはその親）ではなく、まったく別の場所（documentの他の位置）に
-        // 内容を描画している可能性を疑い、監視・検索の範囲を
-        // documentの全体（document.body）に広げた。開門はこのページ内で
-        // 他に使われない専用の合図なので、範囲を広げても誤検知のリスクは低い。
-        const txt=(document.body.textContent||'')+(document.body.innerText||'');
+        // 2026-09-12：ページ全体を見る形に広げたところ、購入していない人にも
+        // 「開門」の文字がどこかに存在し、誤って解錠されてしまうことが判明したため、
+        // 緊急でこの一つの要素だけを見る、元の安全な形に戻す。
+        const txt=(entry.textContent||'')+(entry.innerText||'');
         if(txt.indexOf(UNLOCK_MARK)>=0){
           window.__unlocked=true;
           document.getElementById('member-gate').classList.remove('on');
@@ -2426,10 +2419,8 @@ function closeGate(){
       window.__codocCheck=check;   // openGate から呼べるようにしておく
 
       if(!check()){
-        // 監視対象を document.body 全体にする（理由は上のコメントの通り）。
-        const watchTarget = document.body;
         const mo=new MutationObserver(function(){ if(check()) mo.disconnect(); });
-        mo.observe(watchTarget,{childList:true,subtree:true,characterData:true});
+        mo.observe(entry,{childList:true,subtree:true,characterData:true});
 
         // 保険：60秒間、0.5秒おきに確かめる。
         // codocの読み込みが遅い回線や、描画の仕方が変わった場合に備える。
