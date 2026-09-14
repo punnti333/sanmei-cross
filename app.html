@@ -205,8 +205,9 @@ font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-co
 .detail .big .jishin-inline{display:inline-block;margin-left:9px;vertical-align:middle;
   font-family:sans-serif;font-size:13px;padding:2px 9px;border-radius:12px;letter-spacing:.04em;}
 .flow{margin-top:18px;background:#0f0c0a;border:1px solid rgba(201,164,76,.14);border-radius:10px;
-padding:16px 20px;font-size:15px;line-height:2.0;color:var(--washi2);}
+padding:16px 20px;font-size:15px;line-height:1.9;color:var(--washi2);}
 .flow b{color:var(--kin2);font-weight:700;}
+.flow .flow-block+.flow-block{margin-top:14px;padding-top:14px;border-top:1px dashed rgba(201,164,76,.2);}
 .flow .arr{color:var(--shu);margin:0 6px;}
 .western-year{margin-top:18px;background:linear-gradient(160deg,#191512,#0f0c0a);
 border:1px solid rgba(201,164,76,.24);border-radius:10px;padding:20px 22px;}
@@ -1740,7 +1741,7 @@ function divine(){
   // 2026-09-14 修正：以前は青信号のときしか「使い方」を出しておらず、
   // 黄・赤（特に坤・坎・艮・中宮）は来年の見通しだけで、具体的にどう過ごせばいいかの
   // 文章が足りなかった。PALACE_DOを9宮すべてに拡張し、信号色に関わらず必ず出すようにした。
-  let flowMsg='【今年の使い方】'+PALACE_DO[palace];
+  let flowMsg='<div class="flow-block"><b>【今年の使い方】</b>'+PALACE_DO[palace]+'</div>';
   if(color!=='青'){
     const nty=ty+1;
     const ncen=yearCenter(nty);
@@ -1749,10 +1750,10 @@ function divine(){
     const nfinal=downMark(nbase,(nku?1:0)+(nanken?1:0));
     const ncolor=SIGNAL[nfinal][0], ntop=PALACE_MEAN[npal].split('・')[0];
     let outlookMsg;
-    if(ncolor==='青') outlookMsg='【来年の見通し】'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
-    else if(ncolor==='黄') outlookMsg='【来年の見通し】'+nty+'年は「'+ntop+'」で黄信号。流れは少しずつ上向きます。今年は土台づくりに使ってください。';
-    else outlookMsg='【来年の見通し】'+nty+'年も「'+ntop+'」で赤信号が続きます。あわてず、学びと蓄えにあてる二年と考えてください。';
-    flowMsg+='<br><br>'+outlookMsg;
+    if(ncolor==='青') outlookMsg='<b>【来年の見通し】</b>'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
+    else if(ncolor==='黄') outlookMsg='<b>【来年の見通し】</b>'+nty+'年は「'+ntop+'」で黄信号。流れは少しずつ上向きます。今年は土台づくりに使ってください。';
+    else outlookMsg='<b>【来年の見通し】</b>'+nty+'年も「'+ntop+'」で赤信号が続きます。あわてず、学びと蓄えにあてる二年と考えてください。';
+    flowMsg+='<div class="flow-block">'+outlookMsg+'</div>';
   }
   const el=document.getElementById('result');
   const _sig='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
@@ -1810,7 +1811,7 @@ function divine(){
   const label=(pickedMonth==='last')?'先月':(pickedMonth==='next')?'来月':'今月';
   // まとめ：まず「この月の使い方」を必ず出し、黄・赤のときは翌月の見通しも続けて出す。
   // （年運と同じ理由でPALACE_DO_Mを9宮に拡張し、信号色に関わらず出すようにした）
-  let flowMsg='【この月の使い方】'+PALACE_DO_M[palace];
+  let flowMsg='<div class="flow-block"><b>【この月の使い方】</b>'+PALACE_DO_M[palace]+'</div>';
   if(color!=='青'){
     const nx=shiftMonth(tgt.yearAdj,tgt.setsuMonth,1);
     const ncal=setsuToCalMonth(nx.setsuMonth);
@@ -1820,10 +1821,10 @@ function divine(){
     const nbase=downMark(PALACE_SCORE[npal],nanken?1:0);
     const ncolor=SIGNAL_M[nbase][0], ntop=PALACE_MEAN[npal].split('・')[0];
     let outlookMsg;
-    if(ncolor==='青') outlookMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」の運気に変わり、青信号になります。今はひと休みして、翌月に動くのが得策です。';
-    else if(ncolor==='黄') outlookMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」で黄信号。流れは少しずつ変わります。いまのうちに準備を。';
-    else outlookMsg='【翌月の見通し】翌月（'+ncal+'月）も「'+ntop+'」で赤信号が続きます。この間は整理と充電にあてるのが吉です。';
-    flowMsg+='<br><br>'+outlookMsg;
+    if(ncolor==='青') outlookMsg='<b>【翌月の見通し】</b>翌月（'+ncal+'月）は「'+ntop+'」の運気に変わり、青信号になります。今はひと休みして、翌月に動くのが得策です。';
+    else if(ncolor==='黄') outlookMsg='<b>【翌月の見通し】</b>翌月（'+ncal+'月）は「'+ntop+'」で黄信号。流れは少しずつ変わります。いまのうちに準備を。';
+    else outlookMsg='<b>【翌月の見通し】</b>翌月（'+ncal+'月）も「'+ntop+'」で赤信号が続きます。この間は整理と充電にあてるのが吉です。';
+    flowMsg+='<div class="flow-block">'+outlookMsg+'</div>';
   }
   const el=document.getElementById('result');
   const _sig='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
