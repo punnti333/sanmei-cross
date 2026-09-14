@@ -136,6 +136,8 @@ padding:12px 0;display:inline-block;}
 @media(max-width:560px){.detail-grid{grid-template-columns:1fr;}}
 .detail{background:#0f0c0a;border:1px solid rgba(201,164,76,.18);border-radius:10px;padding:18px 20px;}
 .detail .lab{font-size:12px;letter-spacing:.18em;color:var(--kin2);opacity:.85;margin-bottom:8px;font-weight:700;}
+.detail .lab.lab-big{font-family:'Shippori Mincho',serif;font-size:24px;letter-spacing:.03em;opacity:1;margin-bottom:10px;}
+.detail .lab.lab-big .lab-suffix{font-family:inherit;font-size:13px;letter-spacing:.16em;font-weight:700;opacity:.8;margin-left:2px;}
 .detail .big{font-family:'Shippori Mincho',serif;font-size:26px;font-weight:700;color:var(--washi);letter-spacing:.08em;}
 .detail .wamei{color:var(--kin2);font-size:15px;margin-left:6px;}
 .detail .note{font-size:15px;color:var(--washi2);opacity:.8;margin-top:8px;line-height:1.6;}
@@ -1173,13 +1175,21 @@ const PALACE_DO={
 "巽":"ご縁の年。集まりには顔を出す、紹介された話は一度受けてみる、遠出や旅行も吉。遠くから来た話ほど、いい流れを連れてきます。",
 "兌":"実りと楽しみの年。よく笑い、人との食事や趣味にお金を惜しまない。新しい出会いの場に出ると、喜びごとが増えます。",
 "震":"始動の年。やりたかったことを一つ始める、まわりに宣言する、朝の時間を使う。早く動いた人から順に、勢いに乗れます。",
-"離":"注目の年。発信や発表の場に立つ、作品や実績を表に出す、身なりを整える。見られることを味方につけてください。"};
+"離":"注目の年。発信や発表の場に立つ、作品や実績を表に出す、身なりを整える。見られることを味方につけてください。",
+"坤":"仕込みの年。目立たない作業をコツコツ続ける、基礎や土台になることに時間をかける、無理な拡大は控える。ここでの丁寧さが、次の実りを決めます。",
+"坎":"充電の年。新しいことには手を出さず、学び直しや休養にあてる、心身を整える、無理な誘いは断る。この三つが、次に動くための土台になります。",
+"艮":"見直しの年。続けることとやめることを仕分ける、大きな決断は先延ばしにしない、身の回りを整理する。ここでの決断が、次の流れを決めます。",
+"中宮":"守りの年。新しいことに手を広げない、頼まれごとを抱え込みすぎない、現状維持を優先する。この三つを守れば、無理なく乗り切れます。"};
 const PALACE_DO_M={
 "乾":"仕上げの月。やりかけを完成させ、成果を形にし、お世話になった人にお礼を。締めくくりに向く月です。",
 "巽":"ご縁の月。集まりに顔を出し、紹介された話は一度受けてみる。遠出や旅行も吉です。",
 "兌":"実りと楽しみの月。人との食事や趣味を楽しんで。出会いの場に、喜びごとが待っています。",
 "震":"始動の月。やりたかったことを一つ始めて、まわりに宣言を。早く動くほど勢いに乗れます。",
-"離":"注目の月。発信や発表に向いています。身なりを整え、見られることを味方につけて。"};
+"離":"注目の月。発信や発表に向いています。身なりを整え、見られることを味方につけて。",
+"坤":"仕込みの月。目立たない作業をコツコツと。基礎を固めることに時間をかけて。無理に手を広げないのが吉です。",
+"坎":"充電の月。新しいことには手を出さず、休養や学び直しに時間を使って。無理な誘いは断ってよい月です。",
+"艮":"見直しの月。続けることとやめることを仕分けて。大きな決断は先延ばしにしないで。",
+"中宮":"守りの月。新しいことに手を広げず、頼まれごとを抱え込みすぎないで。現状維持で十分です。"};
 // ===== 信号の一文（宮ごとに枝分かれ）=====
 // 前半＝勢いの強さ、後半＝宮の性質。組み合わせて一文にする
 const PUNCH_LEAD={"◎":"大きく動いていい年。","○":"動いて大丈夫な年。","△":"準備に回したい年。",
@@ -1725,20 +1735,24 @@ function divine(){
   else{let p=[];if(kuubou)p.push('運気の沈む時期');if(anken)p.push('暗剣殺（思わぬ横やりが入りやすい年）');st=p.join('と')+'が重なっているぶん、慎重にいきたい一年です';}
   const pp = steps===0 ? PALACE_PUNCH[palace]
     : '土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただし今年は時期の重なりがあるぶん、その力を大きく使う年ではありません。信号の判定を目安にしてください。';
-  // 最後のまとめ：青なら過ごし方、黄・赤なら来年の見通し
-  let flowMsg;
-  if(color==='青'){
-    flowMsg='【今年の使い方】'+PALACE_DO[palace];
-  }else{
+  // 最後のまとめ：まず「今年の使い方」（どの信号でも必ず出す＝どうすればいいかが分かる）。
+  // 黄・赤のときは、それに加えて来年の見通しも続けて出す。
+  // 2026-09-14 修正：以前は青信号のときしか「使い方」を出しておらず、
+  // 黄・赤（特に坤・坎・艮・中宮）は来年の見通しだけで、具体的にどう過ごせばいいかの
+  // 文章が足りなかった。PALACE_DOを9宮すべてに拡張し、信号色に関わらず必ず出すようにした。
+  let flowMsg='【今年の使い方】'+PALACE_DO[palace];
+  if(color!=='青'){
     const nty=ty+1;
     const ncen=yearCenter(nty);
     const npal=palaceOf(ncen,star), nbase=PALACE_SCORE[npal];
     const nanken=isAnken(ncen,npal), nku=isKuubouYear(y,m,d,nty);
     const nfinal=downMark(nbase,(nku?1:0)+(nanken?1:0));
     const ncolor=SIGNAL[nfinal][0], ntop=PALACE_MEAN[npal].split('・')[0];
-    if(ncolor==='青') flowMsg='【来年の見通し】'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
-    else if(ncolor==='黄') flowMsg='【来年の見通し】'+nty+'年は「'+ntop+'」で黄信号。流れは少しずつ上向きます。今年は土台づくりに使ってください。';
-    else flowMsg='【来年の見通し】'+nty+'年も「'+ntop+'」で赤信号が続きます。あわてず、学びと蓄えにあてる二年と考えてください。';
+    let outlookMsg;
+    if(ncolor==='青') outlookMsg='【来年の見通し】'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
+    else if(ncolor==='黄') outlookMsg='【来年の見通し】'+nty+'年は「'+ntop+'」で黄信号。流れは少しずつ上向きます。今年は土台づくりに使ってください。';
+    else outlookMsg='【来年の見通し】'+nty+'年も「'+ntop+'」で赤信号が続きます。あわてず、学びと蓄えにあてる二年と考えてください。';
+    flowMsg+='<br><br>'+outlookMsg;
   }
   const el=document.getElementById('result');
   const _sig='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
@@ -1747,22 +1761,27 @@ function divine(){
   // 2026-09-01 追加：会員でなくても「今年」の信号カードだけは無料で見せる。
   // 去年・来年は対象外（baseYearは立春基準の「今年」。ty===baseYearのときだけ無料）。
   const _yearFree=(ty===baseYear);
+  // 2026-09-14 修正：「あなたの持ち味」は年で占うモードで去年・来年を見るたびに毎回
+  // 繰り返し出て飽きられるため、今年（ty===baseYear）を見ているときだけ表示する。
   el.innerHTML=((canRead()||_yearFree)?_sig:'')+
     '<div class="detail-grid">'+
-    (canRead()
-      ? '<div class="detail"><div class="lab">あなたの持ち味</div>'+
-        '<div class="type-name">「'+t16.name+'」タイプ</div>'+
-        '<div class="note">'+t16.body+'</div>'+
-        '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
-        (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'
-      : '<div class="detail">'+blurHTML('あなたの持ち味')+'</div>')+
+    (ty!==baseYear ? '' :
+      (canRead()
+        ? '<div class="detail"><div class="lab">あなたの持ち味</div>'+
+          '<div class="type-name">「'+t16.name+'」タイプ</div>'+
+          '<div class="note">'+t16.body+'</div>'+
+          '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
+          (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'
+        : '<div class="detail">'+blurHTML('あなたの持ち味')+'</div>'))+
     (function(){
       if(!canRead()) return '<div class="detail">'+blurHTML('この年の運気')+'</div>';
-      const _in='<div class="lab">'+ty+'年のあなたの運気</div>'+
+      // 2026-09-14 修正：「いつなのか」（年）が目に留まるよう、年数字だけを大きく強調する。
+      const _in='<div class="lab lab-big">'+ty+'<span class="lab-suffix">年のあなたの運気</span></div>'+
         '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+base+'</span>'+jishinTag+'</div>'+
         '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
         '<div class="note">'+pp+'</div>'+chips;
-      return '<div class="detail">'+_in+'</div>';
+      // 「あなたの持ち味」が非表示の年は、この運気カード一枚だけになるので横幅いっぱいに広げる
+      return '<div class="detail"'+(ty!==baseYear?' style="grid-column:1/-1"':'')+'>'+_in+'</div>';
     })()+'</div>'+
     (canRead()
       ? westernYearHTML(y,m,d,ty)+'<div class="flow">'+flowMsg+'</div>'+
@@ -1789,11 +1808,10 @@ function divine(){
   const sg=SIGNAL_M[mfinal],color=sg[0],verdict=sg[1],cls=sg[3];
   const punch=punchText(mfinal,palace,color,true);
   const label=(pickedMonth==='last')?'先月':(pickedMonth==='next')?'来月':'今月';
-  // まとめ：青なら使い方、黄・赤なら翌月の見通し
-  let flowMsg;
-  if(color==='青'){
-    flowMsg='【この月の使い方】'+PALACE_DO_M[palace];
-  }else{
+  // まとめ：まず「この月の使い方」を必ず出し、黄・赤のときは翌月の見通しも続けて出す。
+  // （年運と同じ理由でPALACE_DO_Mを9宮に拡張し、信号色に関わらず出すようにした）
+  let flowMsg='【この月の使い方】'+PALACE_DO_M[palace];
+  if(color!=='青'){
     const nx=shiftMonth(tgt.yearAdj,tgt.setsuMonth,1);
     const ncal=setsuToCalMonth(nx.setsuMonth);
     const npal=monthPalaceByIndex(star,nx.yearAdj,nx.setsuMonth);
@@ -1801,33 +1819,40 @@ function divine(){
     const nanken=isAnken(monthCenter(nzhi,nx.setsuMonth),npal);
     const nbase=downMark(PALACE_SCORE[npal],nanken?1:0);
     const ncolor=SIGNAL_M[nbase][0], ntop=PALACE_MEAN[npal].split('・')[0];
-    if(ncolor==='青') flowMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」の運気に変わり、青信号になります。今はひと休みして、翌月に動くのが得策です。';
-    else if(ncolor==='黄') flowMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」で黄信号。流れは少しずつ変わります。いまのうちに準備を。';
-    else flowMsg='【翌月の見通し】翌月（'+ncal+'月）も「'+ntop+'」で赤信号が続きます。この間は整理と充電にあてるのが吉です。';
+    let outlookMsg;
+    if(ncolor==='青') outlookMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」の運気に変わり、青信号になります。今はひと休みして、翌月に動くのが得策です。';
+    else if(ncolor==='黄') outlookMsg='【翌月の見通し】翌月（'+ncal+'月）は「'+ntop+'」で黄信号。流れは少しずつ変わります。いまのうちに準備を。';
+    else outlookMsg='【翌月の見通し】翌月（'+ncal+'月）も「'+ntop+'」で赤信号が続きます。この間は整理と充電にあてるのが吉です。';
+    flowMsg+='<br><br>'+outlookMsg;
   }
   const el=document.getElementById('result');
   const _sig='<div class="signal-banner '+cls+'"><div class="lamp">'+color+'信号</div>'+
     '<div class="mark">'+mfinal+'</div><div class="verdict">'+verdict+'</div>'+
     '<div class="punch">'+punch+'</div></div>';
+  // 2026-09-14 修正：「あなたの持ち味」は月で占うモードでも先月・来月を見るたびに毎回
+  // 繰り返し出て飽きられるため、年運と同じく今月（pickedMonth==='now'）のときだけ表示する。
+  const _monthIsNow=(pickedMonth==='now');
   el.innerHTML=(canRead()?_sig:'')+
     '<div class="detail-grid">'+
-    (canRead()
-      ? '<div class="detail"><div class="lab">あなたの持ち味</div>'+
-        '<div class="type-name">「'+t16.name+'」タイプ</div>'+
-        '<div class="note">'+t16.body+'</div>'+
-        '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
-        (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'
-      : '<div class="detail">'+blurHTML('あなたの持ち味')+'</div>')+
+    (!_monthIsNow ? '' :
+      (canRead()
+        ? '<div class="detail"><div class="lab">あなたの持ち味</div>'+
+          '<div class="type-name">「'+t16.name+'」タイプ</div>'+
+          '<div class="note">'+t16.body+'</div>'+
+          '<div class="note" style="opacity:.65">☀ 表の顔：'+t16.sun+'（'+t16.se+'）　☾ 心の奥：'+t16.moon+'（'+t16.me+'）</div>'+
+          (t16.note?'<div class="note" style="opacity:.92;font-size:13.5px;margin-top:9px;background:rgba(236,227,208,.06);border-left:3px solid var(--kin2);padding:9px 11px;border-radius:4px">※'+t16.note+'</div>':'')+'</div>'
+        : '<div class="detail">'+blurHTML('あなたの持ち味')+'</div>'))+
     (function(){
       if(!canRead()) return '<div class="detail">'+blurHTML('この月の運気')+'</div>';
-      const _in='<div class="lab">'+label+'（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）のあなたの運気</div>'+
+      const _in='<div class="lab lab-big">'+label+'<span class="lab-suffix">（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）のあなたの運気</span></div>'+
         '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+mfinal+'</span></div>'+
         '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
         '<div class="note">'+(anken?'土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただしこの月は暗剣殺が重なるため、その力を大きく使う月ではありません。信号の判定を目安にしてください。':PALACE_PUNCH[palace])+'</div>'+
         (anken?'<span class="chip chip-kuubou">暗剣殺の月（思わぬ横やり・アクシデントに注意）</span> ':'')+
         (ksatsu==='goou'?'<span class="chip chip-kokoro">心が五黄殺の月（自分から招く乱れに注意）</span>':'')+
         (ksatsu==='anken'?'<span class="chip chip-kokoro">心が暗剣殺の月（迷い・判断の曇りに注意）</span>':'');
-      return '<div class="detail">'+_in+'</div>';
+      // 持ち味が非表示の月は、この運気カード一枚だけになるので横幅いっぱいに広げる
+      return '<div class="detail"'+(!_monthIsNow?' style="grid-column:1/-1"':'')+'>'+_in+'</div>';
     })()+'</div>'+
     (canRead()
       ? '<div class="flow">'+flowMsg+'</div>'+
@@ -2402,19 +2427,19 @@ function closeGate(){
     //   ・一定時間、繰り返し確かめる（codocの描画が遅れた場合の保険）
     const entry=document.getElementById('codoc-entry-jRBN6Pyw9w');
     if(entry){
-      // 2026-09-12：実機の開発者ツールで確認したところ、codocは
-      // #codoc-entry-jRBN6Pyw9w という要素そのものを、
-      // #codoc-entry-body-jRBN6Pyw9w という「別のid」を持つ、
-      // まったく新しい要素に丸ごと置き換えていた。
-      // そのため「同じidを取り直す」という前の修正では見つけられなかった
-      // （そのidはもうどこにも存在しないため）。
-      // idに頼らず、entry の一つ外側（.codoc-wrap、常にこちらが用意した
-      // 固定の入れ物）ごと見るようにする。ページ全体よりは範囲を絞っているので、
-      // 無関係な場所にある文字を拾ってしまう心配は少ない。
-      const scanRoot = entry.closest('.codoc-wrap') || entry.parentElement || entry;
       const check=function(){
         if(window.__unlocked) return true;
-        const txt=(scanRoot.textContent||'')+(scanRoot.innerText||'');
+        // 2026-09-12 修正（1回目）：最初に取得した entry だけを見続けると、
+        // codocがそのノードを丸ごと差し替えた場合に追従できないため、
+        // 確認のたびに毎回そのidの要素を取り直すようにした。
+        // ↓
+        // 2026-09-12 修正（2回目）：それでも実機で「開門は画面に出ているのに
+        // 解錠されない」現象が続いたため、codocが#codoc-entry-jRBN6Pyw9wの
+        // 中（またはその親）ではなく、まったく別の場所（documentの他の位置）に
+        // 内容を描画している可能性を疑い、監視・検索の範囲を
+        // documentの全体（document.body）に広げた。開門はこのページ内で
+        // 他に使われない専用の合図なので、範囲を広げても誤検知のリスクは低い。
+        const txt=(document.body.textContent||'')+(document.body.innerText||'');
         if(txt.indexOf(UNLOCK_MARK)>=0){
           window.__unlocked=true;
           document.getElementById('member-gate').classList.remove('on');
@@ -2426,8 +2451,10 @@ function closeGate(){
       window.__codocCheck=check;   // openGate から呼べるようにしておく
 
       if(!check()){
+        // 監視対象を document.body 全体にする（理由は上のコメントの通り）。
+        const watchTarget = document.body;
         const mo=new MutationObserver(function(){ if(check()) mo.disconnect(); });
-        mo.observe(scanRoot,{childList:true,subtree:true,characterData:true});
+        mo.observe(watchTarget,{childList:true,subtree:true,characterData:true});
 
         // 保険：60秒間、0.5秒おきに確かめる。
         // codocの読み込みが遅い回線や、描画の仕方が変わった場合に備える。
