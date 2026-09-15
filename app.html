@@ -2428,19 +2428,23 @@ function closeGate(){
     //   ・一定時間、繰り返し確かめる（codocの描画が遅れた場合の保険）
     const entry=document.getElementById('codoc-entry-jRBN6Pyw9w');
     if(entry){
+      // 2026-09-12：実機の開発者ツールで確認したところ、codocは
+      // #codoc-entry-jRBN6Pyw9w という要素そのものを、
+      // #codoc-entry-body-jRBN6Pyw9w という「別のid」を持つ、
+      // まったく新しい要素に丸ごと置き換えていた。
+      // そのため「同じidを取り直す」という前の修正では見つけられなかった
+      // （そのidはもうどこにも存在しないため）。
+      // idに頼らず、entry の一つ外側（.codoc-wrap、常にこちらが用意した
+      // 固定の入れ物）ごと見るようにする。ページ全体よりは範囲を絞っているので、
+      // 無関係な場所にある文字を拾ってしまう心配は少ない。
+      // 2026-09-15：document.body全体を見る版（一時的な調査用の修正）が、
+      // 何らかの理由でこのファイルに残ってしまっており、購入していない人にも
+      // 無料で読めてしまう重大な状態が続いていたことが判明。この
+      // .codoc-wrapスコープ版に戻した。今後はこの版を唯一の正としてよい。
+      const scanRoot = entry.closest('.codoc-wrap') || entry.parentElement || entry;
       const check=function(){
         if(window.__unlocked) return true;
-        // 2026-09-12 修正（1回目）：最初に取得した entry だけを見続けると、
-        // codocがそのノードを丸ごと差し替えた場合に追従できないため、
-        // 確認のたびに毎回そのidの要素を取り直すようにした。
-        // ↓
-        // 2026-09-12 修正（2回目）：それでも実機で「開門は画面に出ているのに
-        // 解錠されない」現象が続いたため、codocが#codoc-entry-jRBN6Pyw9wの
-        // 中（またはその親）ではなく、まったく別の場所（documentの他の位置）に
-        // 内容を描画している可能性を疑い、監視・検索の範囲を
-        // documentの全体（document.body）に広げた。開門はこのページ内で
-        // 他に使われない専用の合図なので、範囲を広げても誤検知のリスクは低い。
-        const txt=(document.body.textContent||'')+(document.body.innerText||'');
+        const txt=(scanRoot.textContent||'')+(scanRoot.innerText||'');
         if(txt.indexOf(UNLOCK_MARK)>=0){
           window.__unlocked=true;
           document.getElementById('member-gate').classList.remove('on');
@@ -2452,10 +2456,8 @@ function closeGate(){
       window.__codocCheck=check;   // openGate から呼べるようにしておく
 
       if(!check()){
-        // 監視対象を document.body 全体にする（理由は上のコメントの通り）。
-        const watchTarget = document.body;
         const mo=new MutationObserver(function(){ if(check()) mo.disconnect(); });
-        mo.observe(watchTarget,{childList:true,subtree:true,characterData:true});
+        mo.observe(scanRoot,{childList:true,subtree:true,characterData:true});
 
         // 保険：60秒間、0.5秒おきに確かめる。
         // codocの読み込みが遅い回線や、描画の仕方が変わった場合に備える。
