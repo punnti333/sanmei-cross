@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202609271300';
+var APP_VERSION = '202609271400';
 </script>
 <script>
 (function(){
@@ -209,11 +209,17 @@ font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-co
 .detail .jishin-desc7{color:#ff8a80;}
 .detail .jishin-desc5{color:#f0c47a;}
 .detail .jishin-desc3{color:#8fe0d6;}
-/* 震度の補足（一言・出来事の例・伝え方）。2026-09-27 追加、今は震度5のみ */
-.detail .jishin-more{font-size:14px;color:var(--washi2);line-height:1.7;margin-top:6px;
-  padding:8px 11px;border-left:3px solid #e8a545;background:rgba(232,165,69,.06);border-radius:4px;}
-.detail .jishin-more b{color:#f0c47a;}
-.detail .jishin-more div+div{margin-top:4px;}
+/* 「▼くわしく」（2026-09-27 追加）。押すと開く。左の線は震度バッジと同じ色 */
+.detail .jishin-more{margin-top:6px;font-size:14px;color:var(--washi2);line-height:1.7;}
+.detail .jishin-more summary{cursor:pointer;list-style:none;font-size:13px;font-weight:700;opacity:.85;display:inline-block;padding:2px 0;}
+.detail .jishin-more summary::-webkit-details-marker{display:none;}
+.detail .jishin-more[open] summary{opacity:.6;}
+.detail .jishin-more p{margin:6px 0 0;padding-left:11px;}
+.detail .jishin-more[open]{border-left:3px solid;padding-bottom:4px;}
+.detail .jishin-more[open] summary{padding-left:11px;}
+.detail .jishin-more7 summary{color:#ff8a80;} .detail .jishin-more7[open]{border-color:#e0453c;}
+.detail .jishin-more5 summary{color:#f0c47a;} .detail .jishin-more5[open]{border-color:#e8a545;}
+.detail .jishin-more3 summary{color:#8fe0d6;} .detail .jishin-more3[open]{border-color:#5ac8be;}
 .flow{margin-top:18px;background:#0f0c0a;border:1px solid rgba(201,164,76,.14);border-radius:10px;
 padding:16px 20px;font-size:15px;line-height:1.9;color:var(--washi2);}
 .flow b{color:var(--kin2);font-weight:700;}
@@ -1733,15 +1739,23 @@ function divine(){
     isSanjusatsu?'<span class="jishin-inline chip-jishin7" title="'+_sanju.join('・')+'（三命殺・震度7相当）">震度7｜激震</span>':
     isSanjuWeak?'<span class="jishin-inline chip-jishin5" title="'+_sanju.join('・')+'（参考・震度5相当）">震度5｜亀裂</span>':
     isJishin3?'<span class="jishin-inline chip-jishin3" title="人生の切り替え時期・'+_sanju.join('・')+'（参考・震度3相当）">震度3｜ゆらぎ</span>':'';
+  // 2026-09-27 追加：説明1行の下に「▼くわしく」（押すと開く）を付けた。
+  // 中身は見出しなし（「一言」「出来事の例」などの項目名は付けない）で、文章だけを並べる。
+  const _jMore=(lv,lines)=>'<details class="jishin-more jishin-more'+lv+'"><summary>▼くわしく</summary>'+
+    lines.map(t=>'<p>'+t+'</p>').join('')+'</details>';
   const jishinDesc=
-    isSanjusatsu?'<div class="jishin-desc jishin-desc7">人生が一変するほどの出来事</div>':
-    isSanjuWeak?'<div class="jishin-desc jishin-desc5">棚の物が落ちる。生活に支障が出る</div>'+
-      '<div class="jishin-more">'+
-        '<div><b>関係や立場が揺らぐ。決断を迫られる時期</b></div>'+
-        '<div>出来事の例：別居や冷え込み、退職・転職、友人や親族との断絶、契約トラブル</div>'+
-        '<div>これまで通りが続きにくくなります。感情で決めず、準備してから動くと被害を小さくできます</div>'+
-      '</div>':
-    isJishin3?'<div class="jishin-desc jishin-desc3">気づく人は気づく程度</div>':'';
+    isSanjusatsu?'<div class="jishin-desc jishin-desc7">人生が一変するほどの出来事</div>'+_jMore(7,[
+      'いくつもの出来事が重なりやすい年です。',
+      'たとえば、離婚と転居が重なる、職と人間関係を一度に失う、身内との別れ、健康問題を含む大きな転機など。',
+      '避けられない大波の年です。ただし、ここを越えると人生の景色が新しくなる節目でもあります。']):
+    isSanjuWeak?'<div class="jishin-desc jishin-desc5">棚の物が落ちる。生活に支障が出る</div>'+_jMore(5,[
+      '関係や立場が揺らぎ、決断を迫られる時期です。',
+      'たとえば、別居や冷え込み、退職・転職、友人や親族との断絶、契約トラブルなど。',
+      'これまで通りが続きにくくなります。感情で決めず、準備してから動くと被害を小さくできます。']):
+    isJishin3?'<div class="jishin-desc jishin-desc3">気づく人は気づく程度</div>'+_jMore(3,[
+      '小さな揺れで、気持ちが落ち着かない時期です。',
+      'たとえば、ちょっとした言い争い、職場の空気が気まずくなる、予定が狂う、転職を考え始めるなど。',
+      '今すぐ何かが起きるというより、変化の前触れを感じやすい時期です。']):'';
   let chips='';
   if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
   if(chu) chips+='<span class="chip chip-kuubou">冲の年（人間関係、環境の大きな変化に注意）</span> ';
