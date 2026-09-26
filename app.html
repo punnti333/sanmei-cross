@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202609271400';
+var APP_VERSION = '202609271500';
 </script>
 <script>
 (function(){
@@ -211,12 +211,18 @@ font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-co
 .detail .jishin-desc3{color:#8fe0d6;}
 /* 「▼くわしく」（2026-09-27 追加）。押すと開く。左の線は震度バッジと同じ色 */
 .detail .jishin-more{margin-top:6px;font-size:14px;color:var(--washi2);line-height:1.7;}
-.detail .jishin-more summary{cursor:pointer;list-style:none;font-size:13px;font-weight:700;opacity:.85;display:inline-block;padding:2px 0;}
+/* 2026-09-27 修正：「くわしく」が押せると分かりにくいとの声で、枠付きのボタン風にした。
+   開いているときは「▲ とじる」に切り替わる */
+.detail .jishin-more summary{cursor:pointer;list-style:none;font-size:13px;font-weight:700;display:inline-block;
+  padding:5px 14px;border:1px solid currentColor;border-radius:16px;background:rgba(255,255,255,.05);}
+.detail .jishin-more summary:active{background:rgba(255,255,255,.14);}
 .detail .jishin-more summary::-webkit-details-marker{display:none;}
-.detail .jishin-more[open] summary{opacity:.6;}
+.detail .jishin-more .jm-open{display:none;}
+.detail .jishin-more[open] .jm-open{display:inline;}
+.detail .jishin-more[open] .jm-closed{display:none;}
 .detail .jishin-more p{margin:6px 0 0;padding-left:11px;}
 .detail .jishin-more[open]{border-left:3px solid;padding-bottom:4px;}
-.detail .jishin-more[open] summary{padding-left:11px;}
+.detail .jishin-more[open] summary{margin-left:11px;}
 .detail .jishin-more7 summary{color:#ff8a80;} .detail .jishin-more7[open]{border-color:#e0453c;}
 .detail .jishin-more5 summary{color:#f0c47a;} .detail .jishin-more5[open]{border-color:#e8a545;}
 .detail .jishin-more3 summary{color:#8fe0d6;} .detail .jishin-more3[open]{border-color:#5ac8be;}
@@ -1741,7 +1747,7 @@ function divine(){
     isJishin3?'<span class="jishin-inline chip-jishin3" title="人生の切り替え時期・'+_sanju.join('・')+'（参考・震度3相当）">震度3｜ゆらぎ</span>':'';
   // 2026-09-27 追加：説明1行の下に「▼くわしく」（押すと開く）を付けた。
   // 中身は見出しなし（「一言」「出来事の例」などの項目名は付けない）で、文章だけを並べる。
-  const _jMore=(lv,lines)=>'<details class="jishin-more jishin-more'+lv+'"><summary>▼くわしく</summary>'+
+  const _jMore=(lv,lines)=>'<details class="jishin-more jishin-more'+lv+'"><summary><span class="jm-closed">▼ くわしく見る（タップで開く）</span><span class="jm-open">▲ とじる</span></summary>'+
     lines.map(t=>'<p>'+t+'</p>').join('')+'</details>';
   const jishinDesc=
     isSanjusatsu?'<div class="jishin-desc jishin-desc7">人生が一変するほどの出来事</div>'+_jMore(7,[
