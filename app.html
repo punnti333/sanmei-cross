@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202609271500';
+var APP_VERSION = '202609271600';
 </script>
 <script>
 (function(){
@@ -223,9 +223,11 @@ font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-co
 .detail .jishin-more p{margin:6px 0 0;padding-left:11px;}
 .detail .jishin-more[open]{border-left:3px solid;padding-bottom:4px;}
 .detail .jishin-more[open] summary{margin-left:11px;}
-.detail .jishin-more7 summary{color:#ff8a80;} .detail .jishin-more7[open]{border-color:#e0453c;}
-.detail .jishin-more5 summary{color:#f0c47a;} .detail .jishin-more5[open]{border-color:#e8a545;}
-.detail .jishin-more3 summary{color:#8fe0d6;} .detail .jishin-more3[open]{border-color:#5ac8be;}
+/* 2026-09-27 修正：赤いボタンが下の注意チップ（赤枠）と見分けにくかったため、
+   ボタンと開いたときの左線は震度にかかわらず落ち着いた生成り色（和紙色）の塗りボタンにした */
+.detail .jishin-more summary{color:var(--washi);background:rgba(236,227,208,.13);border-color:rgba(236,227,208,.38);}
+.detail .jishin-more summary:active{background:rgba(236,227,208,.24);}
+.detail .jishin-more[open]{border-color:rgba(236,227,208,.35);}
 .flow{margin-top:18px;background:#0f0c0a;border:1px solid rgba(201,164,76,.14);border-radius:10px;
 padding:16px 20px;font-size:15px;line-height:1.9;color:var(--washi2);}
 .flow b{color:var(--kin2);font-weight:700;}
