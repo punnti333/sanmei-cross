@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202609271200';
+var APP_VERSION = '202609271300';
 </script>
 <script>
 (function(){
@@ -209,6 +209,11 @@ font-family:inherit;font-size:14px;letter-spacing:.06em;-webkit-tap-highlight-co
 .detail .jishin-desc7{color:#ff8a80;}
 .detail .jishin-desc5{color:#f0c47a;}
 .detail .jishin-desc3{color:#8fe0d6;}
+/* 震度の補足（一言・出来事の例・伝え方）。2026-09-27 追加、今は震度5のみ */
+.detail .jishin-more{font-size:14px;color:var(--washi2);line-height:1.7;margin-top:6px;
+  padding:8px 11px;border-left:3px solid #e8a545;background:rgba(232,165,69,.06);border-radius:4px;}
+.detail .jishin-more b{color:#f0c47a;}
+.detail .jishin-more div+div{margin-top:4px;}
 .flow{margin-top:18px;background:#0f0c0a;border:1px solid rgba(201,164,76,.14);border-radius:10px;
 padding:16px 20px;font-size:15px;line-height:1.9;color:var(--washi2);}
 .flow b{color:var(--kin2);font-weight:700;}
@@ -1730,7 +1735,12 @@ function divine(){
     isJishin3?'<span class="jishin-inline chip-jishin3" title="人生の切り替え時期・'+_sanju.join('・')+'（参考・震度3相当）">震度3｜ゆらぎ</span>':'';
   const jishinDesc=
     isSanjusatsu?'<div class="jishin-desc jishin-desc7">人生が一変するほどの出来事</div>':
-    isSanjuWeak?'<div class="jishin-desc jishin-desc5">棚の物が落ちる。生活に支障が出る</div>':
+    isSanjuWeak?'<div class="jishin-desc jishin-desc5">棚の物が落ちる。生活に支障が出る</div>'+
+      '<div class="jishin-more">'+
+        '<div><b>関係や立場が揺らぐ。決断を迫られる時期</b></div>'+
+        '<div>出来事の例：別居や冷え込み、退職・転職、友人や親族との断絶、契約トラブル</div>'+
+        '<div>これまで通りが続きにくくなります。感情で決めず、準備してから動くと被害を小さくできます</div>'+
+      '</div>':
     isJishin3?'<div class="jishin-desc jishin-desc3">気づく人は気づく程度</div>':'';
   let chips='';
   if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
@@ -1746,8 +1756,14 @@ function divine(){
   if(!kuubou&&!chu&&!change&&!anken&&!ksatsu&&!isHeirinN&&!isTensenN&&!isHeirinM&&!isTensenM) chips+='<span class="chip chip-stable">特に大きな注意期ではありません</span>';
   let st; if(steps===0) st='特に重なる時期はなく、運気のまま読めます';
   else{let p=[];if(kuubou)p.push('運気の沈む時期');if(anken)p.push('暗剣殺（思わぬ横やりが入りやすい年）');st=p.join('と')+'が重なっているぶん、慎重にいきたい一年です';}
+  // 2026-09-27 修正：「その力を大きく使う年ではありません」は、もともと良い運気（◎○）の年に
+  // 向けた文で、八方塞がり・運気の底などの凶の年に出ると不自然だった。
+  // ◎○の年は従来の文、△▲×の年は「さらに慎重に」という文に分けた。
+  const _ppTop='土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。';
   const pp = steps===0 ? PALACE_PUNCH[palace]
-    : '土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただし今年は時期の重なりがあるぶん、その力を大きく使う年ではありません。信号の判定を目安にしてください。';
+    : (base==='◎'||base==='○')
+      ? _ppTop+'ただし今年は時期の重なりがあるぶん、その力を大きく使う年ではありません。信号の判定を目安にしてください。'
+      : _ppTop+'そこに時期の重なりが加わるぶん、いっそう慎重にいきたい年です。信号の判定を目安にしてください。';
   // 最後のまとめ：まず「今年の使い方」（どの信号でも必ず出す＝どうすればいいかが分かる）。
   // 黄・赤のときは、それに加えて来年の見通しも続けて出す。
   // 2026-09-14 修正：以前は青信号のときしか「使い方」を出しておらず、
