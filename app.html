@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202609271600';
+var APP_VERSION = '202610011600';
 </script>
 <script>
 (function(){
@@ -1151,6 +1151,9 @@ function monthPillar(y,m,d){
 }
 const SCALE=["◎","○","△","▲","×"];
 function downMark(mark,steps){const i=SCALE.indexOf(mark);return SCALE[Math.min(i+steps,SCALE.length-1)];}
+// 2026-10-01 追加：空亡の年は、九星がどんなに良くても青信号にしない（最高でも黄信号の△）。
+// 空亡は「空回りしやすい2年間」なので、九星の◎○だけで「進め」と出すと表現が甘くなるため。
+function capKuu(mark,kuu){ return (kuu && (mark==='◎'||mark==='○')) ? '△' : mark; }
 // 暗剣殺：その盤で五黄土星が入る宮の「真向かい」に自分の星が回座しているか
 // 五黄が中宮の盤（中宮星が五黄）には暗剣殺なし
 function isAnken(center,myPalace){
@@ -1707,11 +1710,15 @@ function divine(){
   const chu=isChuYear(y,m,d,ty);
   const anken=isAnken(center,palace);
   const ksatsu=keishaSatsu(y,m,d,isMale,center);
-  const steps=(kuubou?1:0)+(anken?1:0),final=downMark(base,steps);
+  const steps=(kuubou?1:0)+(anken?1:0),_final0=downMark(base,steps),final=capKuu(_final0,kuubou);
+  const kuuCapped=(final!==_final0);
   const sg=SIGNAL[final],color=sg[0],verdict=sg[1],cls=sg[3];
   let punch=punchText(final,palace,color,false);
   if(steps>0 && final==='▲' && (base==='◎'||base==='○')){
     punch='地力はある年。動くなら小さく、じっくり。勢いまかせだけは禁物です';
+  }
+  if(kuuCapped){
+    punch='運気の土台は良いが、空回りしやすい年。広げるより、仕上げに徹すること';
   }
   // 三命殺（震度表示、2026-08-30 追加）。信号(color/final)には一切関わらない。
   const yKan=yearKan(ty), yShi=DATA.yearZhi[ty]||'子';
@@ -1765,7 +1772,7 @@ function divine(){
       'たとえば、ちょっとした言い争い、職場の空気が気まずくなる、予定が狂う、転職を考え始めるなど。',
       '今すぐ何かが起きるというより、変化の前触れを感じやすい時期です。']):'';
   let chips='';
-  if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち</span> ';
+  if(kuubou) chips+='<span class="chip chip-kuubou">空回りしやすい2年間のうち'+(kuuCapped?'（本来は青信号。広げず仕上げに徹する年）':'')+'</span> ';
   if(chu) chips+='<span class="chip chip-kuubou">冲の年（人間関係、環境の大きな変化に注意）</span> ';
   if(anken) chips+='<span class="chip chip-kuubou">暗剣殺の年（思わぬ横やり・アクシデントに注意）</span> ';
   if(isHeirinN) chips+='<span class="chip chip-heirin">日柱併臨の年（人生の大きな出来事が起きる年）</span> ';
@@ -1797,7 +1804,7 @@ function divine(){
     const ncen=yearCenter(nty);
     const npal=palaceOf(ncen,star), nbase=PALACE_SCORE[npal];
     const nanken=isAnken(ncen,npal), nku=isKuubouYear(y,m,d,nty);
-    const nfinal=downMark(nbase,(nku?1:0)+(nanken?1:0));
+    const nfinal=capKuu(downMark(nbase,(nku?1:0)+(nanken?1:0)),nku);
     const ncolor=SIGNAL[nfinal][0], ntop=PALACE_MEAN[npal].split('・')[0];
     let outlookMsg;
     if(ncolor==='青') outlookMsg='<b>【来年の見通し】</b>'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
