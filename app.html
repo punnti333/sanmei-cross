@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202610021500';
+var APP_VERSION = '202610031000';
 </script>
 <script>
 (function(){
@@ -137,6 +137,8 @@ padding:12px 0;display:inline-block;}
 .detail{background:#0f0c0a;border:1px solid rgba(201,164,76,.18);border-radius:10px;padding:18px 20px;}
 .detail .lab{font-size:12px;letter-spacing:.18em;color:var(--kin2);opacity:.85;margin-bottom:8px;font-weight:700;}
 .detail .lab.lab-big{font-family:'Shippori Mincho',serif;font-size:24px;letter-spacing:.03em;opacity:1;margin-bottom:10px;}
+.detail .lab.lab-big .lab-range{font-size:24px;font-weight:800;color:var(--kin);margin-left:8px;letter-spacing:.02em;}
+.detail .lab-range-note{font-size:12px;opacity:.75;margin:-6px 0 10px;letter-spacing:.05em;}
 .detail .lab.lab-big .lab-suffix{font-family:inherit;font-size:13px;letter-spacing:.16em;font-weight:700;opacity:.8;margin-left:2px;}
 .detail .big{font-family:'Shippori Mincho',serif;font-size:26px;font-weight:700;color:var(--washi);letter-spacing:.08em;}
 .detail .wamei{color:var(--kin2);font-size:15px;margin-left:6px;}
@@ -1941,7 +1943,10 @@ function divine(){
         : '<div class="detail">'+blurHTML('あなたの持ち味')+'</div>'))+
     (function(){
       if(!canRead()) return '<div class="detail">'+blurHTML('この月の運気')+'</div>';
-      const _in='<div class="lab lab-big">'+label+'<span class="lab-suffix">（'+(setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth)||cal+'月')+'）のあなたの運気</span></div>'+
+      // 2026-10-03：今月・来月が暦の月とずれるため、節入りの期間（例 10/8〜11/6）を大きく表示する。
+      const _rng=setsuRangeLabel(tgt.yearAdj,tgt.setsuMonth);
+      const _in='<div class="lab lab-big">'+label+(_rng?'<span class="lab-range">'+_rng+'</span>':'')+'<span class="lab-suffix">'+(_rng?'':'（'+cal+'月）')+'のあなたの運気</span></div>'+
+        (_rng?'<div class="lab-range-note">月の運気は節入り（'+_rng.split('〜')[0]+'）で切り替わります</div>':'')+
         '<div class="big">'+PALACE_MEAN[palace].split('・')[0]+'<span class="wamei">'+mfinal+'</span></div>'+
         '<div class="note">'+PALACE_MEAN[palace]+'</div>'+
         '<div class="note">'+(anken?'土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。ただしこの月は暗剣殺が重なるため、その力を大きく使う月ではありません。信号の判定を目安にしてください。':PALACE_PUNCH[palace])+'</div>'+
