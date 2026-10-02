@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202610021400';
+var APP_VERSION = '202610021500';
 </script>
 <script>
 (function(){
@@ -2447,20 +2447,32 @@ function openGate(){
   if(typeof window.__codocCheck==='function') window.__codocCheck();
 }
 // 会員として読めるか
-/* 作者用の合言葉。?key=ナラちゃん を一度つけて開くと、この端末が覚えます。
+/* 作者用の合言葉（2026-10-02 変更）。
+   ・合言葉そのものはファイルに書かず、SHA-256 のハッシュだけを置く（ソースを見ても分からない）。
+   ・?key=合言葉 を一度つけて開くと、この端末が覚える。旧合言葉は無効。
+   ・合言葉を読み取ったら、アドレス欄から ?key=… を消して開き直す（合言葉付きURLのうっかり共有を防ぐ）。
    codocに所有者としてログインしていると購読できないため、その回避です。 */
+const OWNER_HASH='68ae097a7f525fb662ade852b98e48dbc3aa330ad17b8a8f3226f10b1809f3de';
 (function(){
   try{
-    const OWNER_KEY='nara';
-    // 以前の合言葉も通す。すでに記録を持っている端末は、入り直さずにそのまま使える。
-    const OWNER_KEYS=['nara','ナラちゃん'];
-    const q=new URLSearchParams(location.search);
-    if(OWNER_KEYS.includes(q.get('key'))) localStorage.setItem('owner_pass',OWNER_KEY);
+    // 旧合言葉の記録は消す
     const saved=localStorage.getItem('owner_pass');
-    if(OWNER_KEYS.includes(saved) && saved!==OWNER_KEY) localStorage.setItem('owner_pass',OWNER_KEY);  // 静かに書き換える
+    if(saved && saved!==OWNER_HASH) localStorage.removeItem('owner_pass');
+    const q=new URLSearchParams(location.search);
+    if(!q.has('key')) return;
+    const k=(q.get('key')||'').trim();
+    q.delete('key');
+    const clean=location.pathname+(q.toString()?'?'+q.toString():'')+location.hash;
+    const done=()=>location.replace(clean);   // ?key を消して開き直す
+    if(!(window.crypto&&crypto.subtle)){ done(); return; }
+    crypto.subtle.digest('SHA-256',new TextEncoder().encode(k)).then(buf=>{
+      const hex=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      if(hex===OWNER_HASH) localStorage.setItem('owner_pass',OWNER_HASH);
+      done();
+    }).catch(done);
   }catch(e){}
 })();
-function isOwner(){ try{ return ['nara','ナラちゃん'].includes(localStorage.getItem('owner_pass')); }catch(e){ return false; } }
+function isOwner(){ try{ return localStorage.getItem('owner_pass')===OWNER_HASH; }catch(e){ return false; } }
 function canRead(){ return isFreePeriod() || window.__unlocked || isOwner(); }
 // 続きを隠すときの差し込み。
 // ※以前はここに実際の鑑定文（inner）を渡し、CSSでぼかすだけだったため、
