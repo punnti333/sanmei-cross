@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202610011600';
+var APP_VERSION = '202610021200';
 </script>
 <script>
 (function(){
@@ -1154,6 +1154,30 @@ function downMark(mark,steps){const i=SCALE.indexOf(mark);return SCALE[Math.min(
 // 2026-10-01 追加：空亡の年は、九星がどんなに良くても青信号にしない（最高でも黄信号の△）。
 // 空亡は「空回りしやすい2年間」なので、九星の◎○だけで「進め」と出すと表現が甘くなるため。
 function capKuu(mark,kuu){ return (kuu && (mark==='◎'||mark==='○')) ? '△' : mark; }
+// 2026-10-02 追加：震度5・7（三命殺の要素が2つ以上重なる年）は、青信号（◎○）でも△に下げる。
+// 震度3（大運交替＋1要素）は「変化」なので下げない。
+function capShindo(mark,n){ return (n>=2 && (mark==='◎'||mark==='○')) ? '△' : mark; }
+// 三命殺の要素一覧（その年に重なっているもの）。今年・来年の両方で使う。
+function sanjuList(y,m,d,ty,star,palace,center){
+  const kuubou=isKuubouYear(y,m,d,ty), chu=isChuYear(y,m,d,ty), anken=isAnken(center,palace);
+  const ksatsu=keishaSatsu(y,m,d,isMale,center);
+  const yKan=yearKan(ty), yShi=DATA.yearZhi[ty]||'子';
+  const dKan_=dayKan(y,m,d), dShi_=dayZhi(y,m,d), mP_=monthPillar(y,m,d);
+  const L=[];
+  if(chu) L.push('冲');
+  if(yKan===dKan_ && yShi===dShi_) L.push('日柱併臨');
+  if(kuubou) L.push('空亡');
+  if(isTensenChichuDay(dKan_,dShi_,yKan,yShi)) L.push('天戦地冲（日柱）');
+  if(yKan===mP_.kan && yShi===mP_.shi) L.push('月柱併臨');
+  if(isTensenChichuDay(mP_.kan,mP_.shi,yKan,yShi)) L.push('天戦地冲（月柱）');
+  if(anken) L.push('本命暗剣殺');
+  if(ksatsu==='anken') L.push('傾斜暗剣殺');
+  if(ksatsu==='goou'&&star!==5) L.push('傾斜五黄殺');
+  if(palace==='中宮') L.push('本命中宮');
+  if(palace==='艮') L.push('本命艮宮');
+  if(palace==='坎') L.push('本命坎宮');
+  return L;
+}
 // 暗剣殺：その盤で五黄土星が入る宮の「真向かい」に自分の星が回座しているか
 // 五黄が中宮の盤（中宮星が五黄）には暗剣殺なし
 function isAnken(center,myPalace){
@@ -1710,8 +1734,11 @@ function divine(){
   const chu=isChuYear(y,m,d,ty);
   const anken=isAnken(center,palace);
   const ksatsu=keishaSatsu(y,m,d,isMale,center);
-  const steps=(kuubou?1:0)+(anken?1:0),_final0=downMark(base,steps),final=capKuu(_final0,kuubou);
-  const kuuCapped=(final!==_final0);
+  const steps=(kuubou?1:0)+(anken?1:0),_final0=downMark(base,steps),_final1=capKuu(_final0,kuubou);
+  const kuuCapped=(_final1!==_final0);
+  const _sanjuN=sanjuList(y,m,d,ty,star,palace,center).length;
+  const final=capShindo(_final1,_sanjuN);
+  const shindoCapped=(final!==_final1);
   const sg=SIGNAL[final],color=sg[0],verdict=sg[1],cls=sg[3];
   let punch=punchText(final,palace,color,false);
   if(steps>0 && final==='▲' && (base==='◎'||base==='○')){
@@ -1720,7 +1747,10 @@ function divine(){
   if(kuuCapped){
     punch='運気の土台は良いが、空回りしやすい年。広げるより、仕上げに徹すること';
   }
-  // 三命殺（震度表示、2026-08-30 追加）。信号(color/final)には一切関わらない。
+  if(shindoCapped){
+    punch='運気の土台は良いが、足元が大きく揺れる年。新しく広げるより、守りを固めること';
+  }
+  // 三命殺（震度表示、2026-08-30 追加）。2026-10-02 から、震度5・7は信号を△まで下げる（capShindo）。
   const yKan=yearKan(ty), yShi=DATA.yearZhi[ty]||'子';
   const dKan_=dayKan(y,m,d), dShi_=dayZhi(y,m,d);
   const isHeirinN=(yKan===dKan_ && yShi===dShi_);
@@ -1789,7 +1819,9 @@ function divine(){
   // 向けた文で、八方塞がり・運気の底などの凶の年に出ると不自然だった。
   // ◎○の年は従来の文、△▲×の年は「さらに慎重に」という文に分けた。
   const _ppTop='土台は「'+PALACE_MEAN[palace].split('・')[0]+'」の運気。';
-  const pp = steps===0 ? PALACE_PUNCH[palace]
+  const pp = shindoCapped
+    ? _ppTop+'ただし今年は足元が大きく揺れるため、その力を大きく使う年ではありません。始めるなら小さく、準備を整えてから動いてください。'
+    : steps===0 ? PALACE_PUNCH[palace]
     : (base==='◎'||base==='○')
       ? _ppTop+'ただし今年は時期の重なりがあるぶん、その力を大きく使う年ではありません。信号の判定を目安にしてください。'
       : _ppTop+'そこに時期の重なりが加わるぶん、いっそう慎重にいきたい年です。信号の判定を目安にしてください。';
@@ -1798,16 +1830,22 @@ function divine(){
   // 2026-09-14 修正：以前は青信号のときしか「使い方」を出しておらず、
   // 黄・赤（特に坤・坎・艮・中宮）は来年の見通しだけで、具体的にどう過ごせばいいかの
   // 文章が足りなかった。PALACE_DOを9宮すべてに拡張し、信号色に関わらず必ず出すようにした。
-  let flowMsg='<div class="flow-block"><b>【今年の使い方】</b>'+PALACE_DO[palace]+'</div>';
+  // 2026-10-02：震度5・7で△に下げた年は、宮本来の「使い方」（始動・拡大など）が合わないため、守りの文に差し替える。
+  let flowMsg='<div class="flow-block"><b>【今年の使い方】</b>'+(shindoCapped
+    ? '揺れの年。新しく始めるなら小さく一つだけ。大きな決断は急がず、家族やパートナーとの話し合い、契約やお金の確認を丁寧に。備えておくほど、揺れは小さくなります。'
+    : PALACE_DO[palace])+'</div>';
   if(color!=='青'){
     const nty=ty+1;
     const ncen=yearCenter(nty);
     const npal=palaceOf(ncen,star), nbase=PALACE_SCORE[npal];
     const nanken=isAnken(ncen,npal), nku=isKuubouYear(y,m,d,nty);
-    const nfinal=capKuu(downMark(nbase,(nku?1:0)+(nanken?1:0)),nku);
+    const _nf1=capKuu(downMark(nbase,(nku?1:0)+(nanken?1:0)),nku);
+    const nfinal=capShindo(_nf1,sanjuList(y,m,d,nty,star,npal,ncen).length);
+    const nShindo=(nfinal!==_nf1);
     const ncolor=SIGNAL[nfinal][0], ntop=PALACE_MEAN[npal].split('・')[0];
     let outlookMsg;
     if(ncolor==='青') outlookMsg='<b>【来年の見通し】</b>'+nty+'年は「'+ntop+'」の運気に変わり、青信号になります。今年は力をため、来年が出しどころです。';
+    else if(nShindo) outlookMsg='<b>【来年の見通し】</b>'+nty+'年は「'+ntop+'」で黄信号。ただし足元が大きく揺れる年です。今年のうちに、関係や仕事の土台を整えておいてください。';
     else if(ncolor==='黄') outlookMsg='<b>【来年の見通し】</b>'+nty+'年は「'+ntop+'」で黄信号。流れは少しずつ上向きます。今年は土台づくりに使ってください。';
     else outlookMsg='<b>【来年の見通し】</b>'+nty+'年も「'+ntop+'」で赤信号が続きます。あわてず、学びと蓄えにあてる二年と考えてください。';
     flowMsg+='<div class="flow-block">'+outlookMsg+'</div>';
