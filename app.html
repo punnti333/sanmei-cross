@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202610031000';
+var APP_VERSION = '202610031200';
 </script>
 <script>
 (function(){
@@ -400,6 +400,22 @@ t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
 y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
 })(window, document, "clarity", "script", "xtj32kc7s7");
 </script>
+<script>
+/* 作者用：合言葉を画面から入れる（2026-10-03 追加）。
+   ホーム画面に追加したアイコンは保存領域がブラウザと別なので、?key= を使えない。
+   その場合に備え、会員案内の一番下の小さな文字から合言葉を入れられるようにする。 */
+function ownerEnter(){
+  const k=(prompt('作者用の合言葉')||'').trim(); if(!k) return;
+  if(!(window.crypto&&crypto.subtle)){ alert('この画面では確認できません'); return; }
+  crypto.subtle.digest('SHA-256',new TextEncoder().encode(k)).then(buf=>{
+    const hex=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(hex==='68ae097a7f525fb662ade852b98e48dbc3aa330ad17b8a8f3226f10b1809f3de'){
+      try{ localStorage.setItem('owner_pass',hex); }catch(e){}
+      location.reload();
+    }else alert('合言葉が違います');
+  });
+}
+</script>
 <script src="https://codoc.jp/js/cms.js" data-usercode="YhOlOTkM4A" defer></script>
 </head>
 <body>
@@ -613,6 +629,7 @@ y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
       <div id="codoc-entry-jRBN6Pyw9w" class="codoc-entries">ようこそ。ご案内をお出ししています</div>
     </div>
     <div class="gate-note">ご購読・ログイン済みの方は、この画面は自動で閉じます。</div>
+    <div style="text-align:center;margin-top:18px;"><span onclick="ownerEnter()" style="font-size:11px;opacity:.35;cursor:pointer;">作者</span></div>
     <a class="back" id="gate-back" onclick="closeGate()" style="display:block;text-align:center;margin-top:24px;">&#9664;　アプリにもどる</a>
   </div>
 </div>
