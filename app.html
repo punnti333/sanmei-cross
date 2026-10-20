@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-var APP_VERSION = '202610031200';
+var APP_VERSION = '202610201700';
 </script>
 <script>
 (function(){
@@ -271,6 +271,8 @@ color:var(--washi2);opacity:.78;font-weight:500;}
 .person-h{font-family:'Shippori Mincho',serif;color:var(--kin2);font-size:15px;letter-spacing:.2em;margin-bottom:10px;}
 .prow{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;}
 .prow input{padding:11px 8px;font-size:14px;}
+.pname-in{margin-top:8px;padding:10px 10px !important;font-size:14px !important;}
+.pn{color:var(--kin2);font-weight:700;}
 .cross-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px;}
 @media(max-width:560px){.cross-grid{grid-template-columns:1fr;}}
 .cross-card{background:#0f0c0a;border:1px solid rgba(201,164,76,.18);border-radius:10px;padding:24px 20px;text-align:center;}
@@ -580,10 +582,12 @@ function ownerEnter(){
       <div class="person"><div class="person-h">あなた</div>
         <div class="prow"><input type="tel" inputmode="numeric" id="ay" placeholder="年 1990">
           <input type="tel" inputmode="numeric" id="am" placeholder="月 7"><input type="tel" inputmode="numeric" id="ad" placeholder="日 3"></div>
+        <input type="text" id="an" class="pname-in" maxlength="12" placeholder="お名前（なくても可）" autocomplete="off">
         <div class="sex-mini"><button type="button" id="a-male" class="on" onclick="setSexA(true)">男</button><button type="button" id="a-female" onclick="setSexA(false)">女</button></div></div>
       <div class="person"><div class="person-h">お相手</div>
         <div class="prow"><input type="tel" inputmode="numeric" id="by" placeholder="年 1988">
           <input type="tel" inputmode="numeric" id="bm" placeholder="月 4"><input type="tel" inputmode="numeric" id="bd" placeholder="日 12"></div>
+        <input type="text" id="bn" class="pname-in" maxlength="12" placeholder="お名前（なくても可）" autocomplete="off">
         <div class="sex-mini"><button type="button" id="b-male" class="on" onclick="setSexB(true)">男</button><button type="button" id="b-female" onclick="setSexB(false)">女</button></div></div>
     </div>
     <div id="people-b" class="people-wrap"></div>
@@ -1520,7 +1524,8 @@ function savePeople(list){try{localStorage.setItem('sanmei_people',JSON.stringif
 function savePerson(iy,im,id){
   const y=+document.getElementById(iy).value,m=+document.getElementById(im).value,d=+document.getElementById(id).value;
   if(!validDate(y,m,d)){alert('先に生年月日を入れてください（西暦1930〜2030）。');return;}
-  const nm=(prompt('お名前をどうぞ（例：母、たろう、山田さん）','')||'').trim();
+  const _ne=(iy==='ay'||iy==='by')?document.getElementById(iy==='ay'?'an':'bn'):null;
+  const nm=(prompt('お名前をどうぞ（例：母、たろう、山田さん）',(_ne&&_ne.value.trim())||'')||'').trim();
   if(!nm)return;
   // どの欄から保存したかで、性別も一緒に控える
   const male=(iy==='by')?isMaleB:(iy==='ay')?isMaleA:isMale;
@@ -1566,6 +1571,8 @@ function usePerson(i,who){
   // 運勢占断の欄（who='')に入れたときだけ、ホロスコープ用に名前を控える
   if(who==='') setCurrentName(p.name);
   const ids=(who==='b')?['by','bm','bd']:(who==='a')?['ay','am','ad']:['y','m','d'];
+  // 相性の欄に呼び出したときは、名前の欄にも入れる（2026-10-20 追加）
+  if(who==='a'||who==='b'){ const ne=document.getElementById(who==='a'?'an':'bn'); if(ne) ne.value=p.name||''; }
   document.getElementById(ids[0]).value=p.y;
   document.getElementById(ids[1]).value=p.m;
   document.getElementById(ids[2]).value=p.d;
@@ -2013,6 +2020,9 @@ function checkAishou(){
   const ay=+ay_.value,am=+am_.value,ad=+ad_.value,by=+by_.value,bm=+bm_.value,bd=+bd_.value;
   if(!validDate(ay,am,ad)||!validDate(by,bm,bd)){alert('二人の生年月日を正しく入力してください（西暦1930〜2030）。');return;}
   const A=persona(ay,am,ad,isMaleA), B=persona(by,bm,bd,isMaleB);
+  // 名前（2026-10-20 追加）：入っていれば「あなた」「お相手」の代わりに名前で出す
+  const _nA=((document.getElementById('an')||{}).value||'').trim(), _nB=((document.getElementById('bn')||{}).value||'').trim();
+  const nameA=escHTML(_nA||'あなた'), nameB=escHTML(_nB||'お相手');
   const sun=aishou(A.sunGogyo,B.sunGogyo);
   const moon=aishou(A.moonGogyo,B.moonGogyo);
   // 本命星と傾斜は50%ずつ（同じ重み）。比和は○＝良い側、相剋は強めのマイナス
@@ -2067,21 +2077,21 @@ function checkAishou(){
   const html=
     '<div class="cross-grid">'+
       '<div class="cross-card"><div class="axis"><span class="sym">☀</span>表の顔の相性<span class="axis-sub">ふだんの付き合いやすさ</span></div>'+
-        '<div class="pairing">'+A.info[0]+'（'+A.sunGogyo+'）　×　'+B.info[0]+'（'+B.sunGogyo+'）</div>'+
+        '<div class="pairing"><span style="white-space:nowrap;"><span class="pn">'+nameA+'</span> '+A.info[0]+'（'+A.sunGogyo+'）</span>　×　<span style="white-space:nowrap;"><span class="pn">'+nameB+'</span> '+B.info[0]+'（'+B.sunGogyo+'）</span></div>'+
         '<div class="rel '+sun[1]+'">'+relMark(sun[0])+'</div><div class="relnote">'+sun[2]+'。</div></div>'+
       (function(){
         if(!canRead()) return '<div class="cross-card"><div class="axis"><span class="sym">☾</span>心の奥の相性<span class="axis-sub">気持ちの通じ方</span></div>'+
           blurHTML('心の奥の相性')+'</div>';
-        const _in='<div class="pairing">'+A.moonGogyo+'　×　'+B.moonGogyo+'</div>'+
+        const _in='<div class="pairing"><span class="pn">'+nameA+'</span> '+A.moonGogyo+'　×　<span class="pn">'+nameB+'</span> '+B.moonGogyo+'</div>'+
           '<div class="rel '+moon[1]+'">'+relMark(moon[0])+'</div><div class="relnote">'+moon[2]+'。</div>';
         return '<div class="cross-card"><div class="axis"><span class="sym">☾</span>心の奥の相性<span class="axis-sub">気持ちの通じ方</span></div>'+
           _in+'</div>';
       })()+
     '</div>'+
-    '<div class="persons-line">'+stemCardHTML('あなた',A)+stemCardHTML('お相手',B)+'</div>'+
+    '<div class="persons-line">'+stemCardHTML(nameA,A)+stemCardHTML(nameB,B)+'</div>'+
     stemLineHTML(A,B)+
     (canRead()
-      ? '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">二人の縁は ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+gapNote+'</div>'+
+      ? '<div class="verdict-box"><div class="vstars">'+starStr+'</div><div class="vh">'+((_nA||_nB)?nameA+'と'+nameB+'の縁は':'二人の縁は')+' ─ '+verdict+'</div><div class="vpunch">'+punch+'</div><div class="vt">'+vt+'</div>'+tbnote+keishaNote+gapNote+'</div>'+
         shareRowHTML('私たちの相性は'+starStr+'「'+verdict+'」でした！ #三命クロス法')
       : lockHTML('二人の縁',
           '表の顔と心の奥、その二つを合わせた総合の判定を<br>星の数と一言でお伝えします。'));
@@ -2126,6 +2136,7 @@ function goAishou(){
       ay_.value=p.y; am_.value=p.m; ad_.value=p.d;
       ayIsAuto=true;
       if(typeof p.male==='boolean') setSexA(p.male);
+      const an=document.getElementById('an'); if(an && p.name && !an.value) an.value=p.name;
     }
   }catch(e){}
 }
