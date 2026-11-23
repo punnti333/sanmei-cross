@@ -554,8 +554,10 @@ function ownerEnter(){
       <div class="field"><label>月</label><input type="tel" inputmode="numeric" id="dm" min="1" max="12" placeholder="7"></div>
       <div class="field"><label>日</label><input type="tel" inputmode="numeric" id="dd" min="1" max="31" placeholder="3"></div>
       <button class="divine-btn" onclick="divineDaily()">三　日　占　断</button>
+      <button type="button" class="save-btn" onclick="savePerson('dy','dm','dd')">＋ この生年月日に名前をつけて保存</button>
     </div>
   </div>
+  <div id="people-d" class="people-wrap"></div>
   <div id="daily-result"></div>
   <div class="again-row" id="again-daily-result" style="display:none;flex-direction:column;">
     <a class="again-btn" href="https://punnti333.github.io/horoscope/?go=today" target="_blank" rel="noopener" onclick="return toTodayHoroscope(this);" style="text-decoration:none;">今日の星占いも見る（西洋占星術へ）</a>
@@ -1528,10 +1530,15 @@ function savePerson(iy,im,id){
   const nm=(prompt('お名前をどうぞ（例：母、たろう、山田さん）',(_ne&&_ne.value.trim())||'')||'').trim();
   if(!nm)return;
   // どの欄から保存したかで、性別も一緒に控える
-  const male=(iy==='by')?isMaleB:(iy==='ay')?isMaleA:isMale;
+  // 三日占断の画面（dy）には性別の欄がないので、運勢占断の性別を勝手に写さない。
+  // 同じ名前で登録済みなら、その性別・時刻を引き継ぐ。
+  const _old=loadPeople().filter(function(e){return e.name===nm.slice(0,12);})[0];
+  const male=(iy==='dy')?(_old?_old.male:undefined):(iy==='by')?isMaleB:(iy==='ay')?isMaleA:isMale;
   /* 出生時刻が入っていれば一緒に控える。名簿はホロスコープと共有しているので、
      ここで持たせておくと、向こうで時刻を聞かれずに済みます。 */
-  const rec={name:nm.slice(0,12),y:y,m:m,d:d,male:male};
+  const rec={name:nm.slice(0,12),y:y,m:m,d:d};
+  if(typeof male==='boolean') rec.male=male;
+  if(_old&&+_old.y===y&&+_old.m===m&&+_old.d===d&&typeof _old.h==='number'){ rec.h=_old.h; rec.mi=_old.mi||0; }
   try{
     const hh=document.getElementById('bh'), mm2=document.getElementById('bmi');
     if(iy==='y'&&hh&&hh.value!==''){
@@ -1555,7 +1562,7 @@ function savePerson(iy,im,id){
   }
   list.unshift(rec);
   savePeople(list);
-  if(iy==='y') setCurrentName(nm);
+  if(iy==='y'||iy==='dy') setCurrentName(nm);
 }
 function escHTML(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;')
   .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -1569,8 +1576,22 @@ function usePerson(i,who){
   const p=loadPeople()[i];
   if(!p)return;
   // 運勢占断の欄（who='')に入れたときだけ、ホロスコープ用に名前を控える
-  if(who==='') setCurrentName(p.name);
-  const ids=(who==='b')?['by','bm','bd']:(who==='a')?['ay','am','ad']:['y','m','d'];
+  if(who===''||who==='d') setCurrentName(p.name);
+  const ids=(who==='b')?['by','bm','bd']:(who==='a')?['ay','am','ad']:(who==='d')?['dy','dm','dd']:['y','m','d'];
+  // 三日占断の画面：入れたらそのまま占い、名前と時刻をホロスコープへ引き継げるよう控えも更新する
+  if(who==='d'){
+    document.getElementById('dy').value=p.y;
+    document.getElementById('dm').value=p.m;
+    document.getElementById('dd').value=p.d;
+    try{
+      const prof={y:p.y,m:p.m,d:p.d,name:p.name};
+      if(typeof p.male==='boolean') prof.male=p.male;
+      if(typeof p.h==='number'){ prof.h=p.h; prof.mi=p.mi||0; }
+      localStorage.setItem('sanmei_profile',JSON.stringify(prof));
+    }catch(e){}
+    divineDaily();
+    return;
+  }
   // 相性の欄に呼び出したときは、名前の欄にも入れる（2026-10-20 追加）
   if(who==='a'||who==='b'){ const ne=document.getElementById(who==='a'?'an':'bn'); if(ne) ne.value=p.name||''; }
   document.getElementById(ids[0]).value=p.y;
@@ -1605,7 +1626,7 @@ function usePerson(i,who){
 
 function renderPeople(){
   const list=loadPeople();
-  [['people',''],['people-b','b']].forEach(function(pair){
+  [['people',''],['people-b','b'],['people-d','d']].forEach(function(pair){
     const el=document.getElementById(pair[0]); if(!el)return;
     if(!list.length){el.innerHTML='';return;}
     const isAishou=(pair[1]==='b');
@@ -1620,7 +1641,7 @@ function renderPeople(){
           '<span class="pto" data-use="'+i+'" data-who="b">相</span>'+
           '<span class="pdel" data-del="'+i+'">×</span></span>';
       }else{
-        s+='<span class="pchip" data-use="'+i+'" data-who="">'+
+        s+='<span class="pchip" data-use="'+i+'" data-who="'+pair[1]+'">'+
           '<span class="pname">'+escHTML(e.name)+'</span>　'+e.y+'.'+e.m+'.'+e.d+sexTag+
           '<span class="pdel" data-del="'+i+'">×</span></span>';
       }
@@ -1722,7 +1743,7 @@ function setSexB(m){isMaleB=m;
 let currentName='';
 function setCurrentName(nm){ currentName=(nm||'').trim(); }
 (function watchNameReset(){
-  ['y','m','d'].forEach(function(id){
+  ['y','m','d','dy','dm','dd'].forEach(function(id){
     const el=document.getElementById(id);
     if(el) el.addEventListener('input',function(){ currentName=''; });
   });
@@ -2476,6 +2497,13 @@ function divineDaily(){
   try{
     const p=JSON.parse(localStorage.getItem('sanmei_profile')||'{}')||{};
     saveProfile(y,m,d,(typeof p.male==='boolean')?p.male:isMale);
+    // 同じ生年月日のままなら、控えていた名前と出生時刻を失わない
+    if(+p.y===y&&+p.m===m&&+p.d===d){
+      const np=JSON.parse(localStorage.getItem('sanmei_profile')||'{}')||{};
+      if(p.name&&!np.name) np.name=p.name;
+      if(typeof np.h!=='number'&&typeof p.h==='number'){ np.h=p.h; np.mi=p.mi||0; }
+      localStorage.setItem('sanmei_profile',JSON.stringify(np));
+    }
   }catch(e){}
   const myStar=honmeiStar(y,m,d)[0];
   const kuuPair=dayKuubou(y,m,d);
